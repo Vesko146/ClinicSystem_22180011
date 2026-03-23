@@ -19,9 +19,16 @@ namespace ClinicSystem_22180011.Controllers
         }
 
         // GET: Doctors
-        public async Task<IActionResult> Index()
+        public async Task<IActionResult> Index(string searchString)
         {
-            return View(await _context.Doctors.ToListAsync());
+            var doctors = from d in _context.Doctors select d;
+
+            if (!String.IsNullOrEmpty(searchString))
+            {
+                doctors = doctors.Where(s => s.FullName.Contains(searchString));
+            }
+
+            return View(await doctors.ToListAsync());
         }
 
         // GET: Doctors/Details/5

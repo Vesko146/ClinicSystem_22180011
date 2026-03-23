@@ -33,7 +33,8 @@ namespace ClinicSystem_22180011.Controllers
             }
 
             var patient = await _context.Patients
-                .FirstOrDefaultAsync(m => m.PatientId == id);
+     .Include(p => p.Appointments) // This loads the related data
+     .FirstOrDefaultAsync(m => m.PatientId == id);
             if (patient == null)
             {
                 return NotFound();

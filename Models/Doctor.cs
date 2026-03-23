@@ -8,7 +8,10 @@ public partial class Doctor
 {
     public int DoctorId { get; set; }
 
-    public string FullName { get; set; } = null!;
+
+    [Display(Name = "Име на лекар")]
+    [Required(ErrorMessage = "Името е задължително")]
+    public string FullName { get; set; }
 
     [Display(Name = "Специалност")]
     public string? Specialty { get; set; }
