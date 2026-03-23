@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.14.36623.8 d17.14
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ClinicSystem_22180011", "ClinicSystem_22180011.csproj", "{419DA72E-A41F-4870-976C-39B5CC37E7AB}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{419DA72E-A41F-4870-976C-39B5CC37E7AB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{419DA72E-A41F-4870-976C-39B5CC37E7AB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{419DA72E-A41F-4870-976C-39B5CC37E7AB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{419DA72E-A41F-4870-976C-39B5CC37E7AB}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {43CD103B-F8BA-4A0C-8F97-8A456717A74C}
+	EndGlobalSection
+EndGlobal
