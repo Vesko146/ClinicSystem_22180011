@@ -1,11 +1,12 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+﻿using ClinicSystem_22180011.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
-using ClinicSystem_22180011.Models;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace ClinicSystem_22180011.Controllers
 {
@@ -122,6 +123,7 @@ namespace ClinicSystem_22180011.Controllers
             return View(doctor);
         }
 
+        [Authorize(Roles = "Admin")]
         // GET: Doctors/Delete/5
         public async Task<IActionResult> Delete(int? id)
         {

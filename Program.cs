@@ -1,3 +1,5 @@
+using ClinicSystem_22180011.Models;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -5,8 +7,9 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
 builder.Services.AddControllersWithViews();
 
-builder.Services.AddDbContext<ClinicSystem_22180011.Models.ClinicContext>(options =>
+builder.Services.AddDbContext<ClinicSystem_22180011.Models.Clinic22180011Context>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+
 
 var app = builder.Build();
 

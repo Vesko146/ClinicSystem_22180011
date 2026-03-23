@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using Microsoft.EntityFrameworkCore;
 
+
 namespace ClinicSystem_22180011.Models;
 
 public partial class Clinic22180011Context : DbContext
@@ -70,7 +71,7 @@ public partial class Clinic22180011Context : DbContext
 
             entity.Property(e => e.DoctorId).HasColumnName("DoctorID");
             entity.Property(e => e.FullName).HasMaxLength(100);
-            entity.Property(e => e.LastModified22180011)
+            entity.Property(e => e.LastModified_22180011)
                 .HasDefaultValueSql("(getdate())")
                 .HasColumnType("datetime")
                 .HasColumnName("LastModified_22180011");
