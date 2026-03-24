@@ -1,11 +1,13 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
+using System;
+using System.Collections.Generic;
 
 
 namespace ClinicSystem_22180011.Models;
 
-public partial class Clinic22180011Context : DbContext
+public partial class Clinic22180011Context : IdentityDbContext<IdentityUser>
 {
     public Clinic22180011Context()
     {
@@ -38,6 +40,7 @@ public partial class Clinic22180011Context : DbContext
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+        base.OnModelCreating(modelBuilder);
         modelBuilder.Entity<Appointment>(entity =>
         {
             entity.HasKey(e => e.AppointId).HasName("PK__Appointm__DCC1C95971A93C2F");

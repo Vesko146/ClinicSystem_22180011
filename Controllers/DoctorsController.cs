@@ -126,18 +126,19 @@ namespace ClinicSystem_22180011.Controllers
         [Authorize(Roles = "Doctor")]
         public async Task<IActionResult> MySchedule()
         {
-            // Get the ID of the logged-in user
+            // 1. Get the Logged-in User's ID
             var currentUserId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
 
-            // Find the appointments for the doctor linked to this user
-            var schedule = await _context.Appointments
+            // 2. Find the Appointments for the Doctor linked to this User
+            var appointments = await _context.Appointments
                 .Include(a => a.Patient)
                 .Where(a => a.Doctor.UserId == currentUserId)
-                .OrderBy(a => a.AppointmentDate)
+                .OrderBy(a => a.AppointmentDate) // This shows the "Gaps" naturally
                 .ToListAsync();
 
-            return View(schedule);
+            return View(appointments);
         }
+       
         //Authorize(Roles = "Admin")]
         // GET: Doctors/Delete/5
         public async Task<IActionResult> Delete(int? id)

@@ -45,5 +45,9 @@ app.MapControllerRoute(
     pattern: "{controller=Home}/{action=Index}/{id?}")
     .WithStaticAssets();
 
+using (var scope = app.Services.CreateScope())
+{
+    await ClinicSystem_22180011.Data.DbInitializer.SeedRolesAndUsers(scope.ServiceProvider);
+}
 
 app.Run();
