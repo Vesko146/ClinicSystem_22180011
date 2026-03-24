@@ -15,5 +15,7 @@ public partial class Patient
 
     public DateTime? LastModified22180011 { get; set; }
 
+    public string? UserId { get; set; }
+
     public virtual ICollection<Appointment> Appointments { get; set; } = new List<Appointment>();
 }

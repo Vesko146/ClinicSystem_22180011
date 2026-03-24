@@ -123,7 +123,22 @@ namespace ClinicSystem_22180011.Controllers
             return View(doctor);
         }
 
-        [Authorize(Roles = "Admin")]
+        [Authorize(Roles = "Doctor")]
+        public async Task<IActionResult> MySchedule()
+        {
+            // Get the ID of the logged-in user
+            var currentUserId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+
+            // Find the appointments for the doctor linked to this user
+            var schedule = await _context.Appointments
+                .Include(a => a.Patient)
+                .Where(a => a.Doctor.UserId == currentUserId)
+                .OrderBy(a => a.AppointmentDate)
+                .ToListAsync();
+
+            return View(schedule);
+        }
+        //Authorize(Roles = "Admin")]
         // GET: Doctors/Delete/5
         public async Task<IActionResult> Delete(int? id)
         {
