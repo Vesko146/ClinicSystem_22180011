@@ -5,12 +5,23 @@ using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// 1. Connection String
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+// 2. DbContext
+builder.Services.AddDbContext<Clinic22180011Context>(options =>
+    options.UseSqlServer(connectionString));
+
+// 3. Identity with Roles (Exercise 11 requirement)
+builder.Services.AddIdentity<IdentityUser, IdentityRole>()
+    .AddRoleManager<RoleManager<IdentityRole>>()
+    .AddEntityFrameworkStores<Clinic22180011Context>()
+    .AddDefaultUI()
+    .AddDefaultTokenProviders();
+
 // Add services to the container.
 builder.Services.AddControllersWithViews();
 
-builder.Services.AddDbContext<ClinicSystem_22180011.Models.Clinic22180011Context>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
-
+builder.Services.AddRazorPages();
 
 var app = builder.Build();
 
