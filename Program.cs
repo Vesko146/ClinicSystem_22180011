@@ -11,6 +11,8 @@ var connectionString = builder.Configuration.GetConnectionString("DefaultConnect
 builder.Services.AddDbContext<Clinic22180011Context>(options =>
     options.UseSqlServer(connectionString));
 
+builder.Services.AddDefaultIdentity<User>(options => options.SignIn.RequireConfirmedAccount = true).AddEntityFrameworkStores<Clinic22180011Context>();
+
 // 3. Identity with Roles (Exercise 11 requirement)
 builder.Services.AddIdentity<IdentityUser, IdentityRole>()
     .AddRoleManager<RoleManager<IdentityRole>>()
