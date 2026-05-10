@@ -74,7 +74,7 @@ public partial class ClinicContext : DbContext
                 .HasDefaultValueSql("(getdate())")
                 .HasColumnType("datetime")
                 .HasColumnName("LastModified_22180011");
-            entity.Property(e => e.Specialty).HasMaxLength(100);
+           
             entity.Property(e => e.UserId).HasMaxLength(450);
         });
 

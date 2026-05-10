@@ -24,6 +24,12 @@ namespace ClinicSystem_22180011.Controllers
             _userManager = userManager;
         }
 
+        // Това показва списъка с всички часове, за да не дава 404
+        public async Task<IActionResult> Index()
+        {
+            var context = _context.Appointments.Include(a => a.Doctor).Include(a => a.Patient);
+            return View(await context.ToListAsync());
+        }
         // СТЪПКА 1: Пациентът избира лекар (Падащо меню)
         [Authorize(Roles = "Patient")]
         public async Task<IActionResult> SelectDoctor()

@@ -78,7 +78,7 @@ public partial class Clinic22180011Context : IdentityDbContext<IdentityUser>
                 .HasDefaultValueSql("(getdate())")
                 .HasColumnType("datetime")
                 .HasColumnName("LastModified_22180011");
-            entity.Property(e => e.Specialty).HasMaxLength(100);
+            
         });
 
         modelBuilder.Entity<ExamDetail>(entity =>

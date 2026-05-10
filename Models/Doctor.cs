@@ -9,8 +9,6 @@ public partial class Doctor
 
     public string FullName { get; set; } = null!;
 
-    public string? Specialty { get; set; }
-
     public DateTime? LastModified22180011 { get; set; }
 
     public string? UserId { get; set; }
