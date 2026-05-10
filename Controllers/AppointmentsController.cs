@@ -23,216 +23,76 @@ namespace ClinicSystem_22180011.Controllers
             _context = context;
             _userManager = userManager;
         }
-       
 
+        // СТЪПКА 1: Пациентът избира лекар (Падащо меню)
         [Authorize(Roles = "Patient")]
-        public async Task<IActionResult> BookAppointment()
+        public async Task<IActionResult> SelectDoctor()
         {
-            // Извличаме списъка с лекари, за да ги покажем на пациента
-            var doctors = await _context.Doctors.ToListAsync();
-            return View(doctors);
+            ViewData["DoctorId"] = new SelectList(_context.Doctors, "DoctorId", "Name");
+            return View();
         }
 
-        public async Task<IActionResult> SelectSlot(int doctorId, DateTime date)
+        // СТЪПКА 2: Показване на часовете (Синьо/Сиво)
+        [Authorize(Roles = "Patient")]
+        public async Task<IActionResult> AvailableSlots(int doctorId, DateTime date)
         {
+            // Вземаме вече заетите часове от базата
             var takenSlots = await _context.Appointments
                 .Where(a => a.DoctorId == doctorId && a.AppointmentDate.Date == date.Date)
                 .Select(a => a.AppointmentDate)
                 .ToListAsync();
 
-            var slots = new List<SlotViewModel>();
-            DateTime startTime = date.Date.AddHours(8); // Почваме от 8:00
+            ViewBag.DoctorId = doctorId;
+            ViewBag.SelectedDate = date;
+            ViewBag.TakenSlots = takenSlots;
 
-            for (int i = 0; i < 16; i++) // 16 слота по 30 мин = 8 часа
-            {
-                slots.Add(new SlotViewModel
-                {
-                    Time = startTime,
-                    IsTaken = takenSlots.Contains(startTime)
-                });
-                startTime = startTime.AddMinutes(30);
-            }
-            return View(slots);
-        }
-
-        // GET: Appointments
-        [Authorize(Roles = "Admin,Doctor")]
-        public async Task<IActionResult> Index()
-        {
-            var clinic22180011Context = _context.Appointments.Include(a => a.Doctor).Include(a => a.Patient);
-            return View(await clinic22180011Context.ToListAsync());
-        }
-
-        // GET: Appointments/Details/5
-        [Authorize(Roles = "Admin,Doctor")]
-        public async Task<IActionResult> Details(int? id)
-        {
-            if (id == null)
-            {
-                return NotFound();
-            }
-
-            var appointment = await _context.Appointments
-                .Include(a => a.Doctor)
-                .Include(a => a.Patient)
-                .FirstOrDefaultAsync(m => m.AppointId == id);
-            if (appointment == null)
-            {
-                return NotFound();
-            }
-
-            return View(appointment);
-        }
-
-        // GET: Appointments/Create
-        [Authorize(Roles = "Patient")]
-        public IActionResult Create()
-        {
-            ViewData["DoctorId"] = new SelectList(_context.Doctors, "DoctorId", "DoctorId");
-            ViewData["PatientId"] = new SelectList(_context.Patients, "PatientId", "PatientId");
             return View();
         }
 
-        // POST: Appointments/Create
+        // СТЪПКА 3: Финален запис и проверка за дублиране (Race Condition)
         [HttpPost]
-        [ValidateAntiForgeryToken]
-        [Authorize(Roles = "Patient")] // Само пациенти могат да записват
-        public async Task<IActionResult> Create([Bind("DoctorId,AppointmentDate")] Appointment appointment)
+        [Authorize(Roles = "Patient")]
+        public async Task<IActionResult> Book(int doctorId, DateTime slot)
         {
-            // 1. Вземаме ID-то на логнатия потребител (User Login от диаграмата)
-            var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var userId = _userManager.GetUserId(User);
+            var patient = await _context.Patients.FirstOrDefaultAsync(p => p.UserId == userId);
 
-            // 2. Намираме кой пациент в нашата таблица съответства на този потребител
-            var patient = await _context.Patients.FirstOrDefaultAsync(p => p.UserId == currentUserId);
-
-            if (patient == null)
+            var newAppointment = new Appointment
             {
-                return BadRequest("Вашият потребител не е свързан с пациентски профил.");
-            }
+                DoctorId = doctorId,
+                PatientId = patient.PatientId,
+                AppointmentDate = slot,
+                Status = "Confirmed"
+            };
 
-            appointment.PatientId = patient.PatientId;
-            appointment.Status = "Pending"; // Начален статус
-
-            // 3. ПРОВЕРКА ЗА СВОБОДЕН ЧАС (Validate Slot от диаграмата)
-            bool isTaken = await _context.Appointments.AnyAsync(a =>
-                a.DoctorId == appointment.DoctorId &&
-                a.AppointmentDate == appointment.AppointmentDate);
-
-            if (isTaken)
+            try
             {
-                // Разклонение "Slot taken -> Error" от диаграмата
-                ModelState.AddModelError("", "Този час вече е зает! Моля, изберете друг слот.");
-                ViewData["DoctorId"] = new SelectList(_context.Doctors, "DoctorId", "Name", appointment.DoctorId);
-                return View(appointment);
-            }
-
-            // 4. ЗАПИС (Create Appointment -> Update Schedule от диаграмата)
-            if (ModelState.IsValid)
-            {
-                _context.Add(appointment);
+                _context.Add(newAppointment);
                 await _context.SaveChangesAsync();
-                return RedirectToAction(nameof(Index)); // Show New Schedule
+                TempData["Success"] = "Часът е записан успешно!";
+            }
+            catch
+            {
+                // Ако уникалният индекс в SQL сработи, ще хвърли грешка тук
+                TempData["Error"] = "Упс! Този час току-що беше зает от друг пациент.";
             }
 
-            ViewData["DoctorId"] = new SelectList(_context.Doctors, "DoctorId", "Name", appointment.DoctorId);
-            return View(appointment);
+            return RedirectToAction("Index", "Home");
         }
 
-        // GET: Appointments/Edit/5
-        [Authorize(Roles = "Admin,Doctor")]
-        public async Task<IActionResult> Edit(int? id)
+        [Authorize(Roles = "Doctor")]
+        public async Task<IActionResult> MySchedule()
         {
-            if (id == null)
-            {
-                return NotFound();
-            }
+            var userId = _userManager.GetUserId(User);
 
-            var appointment = await _context.Appointments.FindAsync(id);
-            if (appointment == null)
-            {
-                return NotFound();
-            }
-            ViewData["DoctorId"] = new SelectList(_context.Doctors, "DoctorId", "DoctorId", appointment.DoctorId);
-            ViewData["PatientId"] = new SelectList(_context.Patients, "PatientId", "PatientId", appointment.PatientId);
-            return View(appointment);
-        }
-
-        
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        [Authorize(Roles = "Admin,Doctor")]
-        public async Task<IActionResult> Edit(int id, [Bind("AppointId,PatientId,DoctorId,AppointmentDate,Status,LastModified22180011")] Appointment appointment)
-        {
-            if (id != appointment.AppointId)
-            {
-                return NotFound();
-            }
-
-            if (ModelState.IsValid)
-            {
-                try
-                {
-                    _context.Update(appointment);
-                    await _context.SaveChangesAsync();
-                }
-                catch (DbUpdateConcurrencyException)
-                {
-                    if (!AppointmentExists(appointment.AppointId))
-                    {
-                        return NotFound();
-                    }
-                    else
-                    {
-                        throw;
-                    }
-                }
-                return RedirectToAction(nameof(Index));
-            }
-            ViewData["DoctorId"] = new SelectList(_context.Doctors, "DoctorId", "DoctorId", appointment.DoctorId);
-            ViewData["PatientId"] = new SelectList(_context.Patients, "PatientId", "PatientId", appointment.PatientId);
-            return View(appointment);
-        }
-
-        // GET: Appointments/Delete/5
-        [Authorize(Roles = "Admin,Doctor")]
-        public async Task<IActionResult> Delete(int? id)
-        {
-            if (id == null)
-            {
-                return NotFound();
-            }
-
-            var appointment = await _context.Appointments
-                .Include(a => a.Doctor)
+            // Филтрираме прегледите: само тези, които са за лекаря с това UserId
+            var myAppointments = await _context.Appointments
                 .Include(a => a.Patient)
-                .FirstOrDefaultAsync(m => m.AppointId == id);
-            if (appointment == null)
-            {
-                return NotFound();
-            }
+                .Where(a => a.Doctor.UserId == userId)
+                .OrderBy(a => a.AppointmentDate)
+                .ToListAsync();
 
-            return View(appointment);
-        }
-
-        // POST: Appointments/Delete/5
-        [HttpPost, ActionName("Delete")]
-        [ValidateAntiForgeryToken]
-        [Authorize(Roles = "Admin,Doctor")]
-        public async Task<IActionResult> DeleteConfirmed(int id)
-        {
-            var appointment = await _context.Appointments.FindAsync(id);
-            if (appointment != null)
-            {
-                _context.Appointments.Remove(appointment);
-            }
-
-            await _context.SaveChangesAsync();
-            return RedirectToAction(nameof(Index));
-        }
-
-        private bool AppointmentExists(int id)
-        {
-            return _context.Appointments.Any(e => e.AppointId == id);
+            return View(myAppointments);
         }
     }
 }

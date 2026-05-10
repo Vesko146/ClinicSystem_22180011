@@ -1,0 +1,15 @@
+﻿@foreach (var hour in new[] { "08:00", "09:00", "10:00", "11:00" }) // Примерни часове
+{
+    var currentSlot = ViewBag.SelectedDate.Add(TimeSpan.Parse(hour));
+    bool isTaken = ((List<DateTime>)ViewBag.TakenSlots).Contains(currentSlot);
+
+    if (isTaken)
+    {
+        <button class="btn btn-secondary disabled">@hour (Заето)</button>
+    }
+    else
+    {
+        <a asp-action="Book" asp-route-doctorId="@ViewBag.DoctorId" asp-route-slot="@currentSlot"
+           class="btn btn-primary">@hour (Свободно)</a>
+    }
+}
