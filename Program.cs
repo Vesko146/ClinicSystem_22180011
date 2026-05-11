@@ -11,13 +11,16 @@ var connectionString = builder.Configuration.GetConnectionString("DefaultConnect
 builder.Services.AddDbContext<Clinic22180011Context>(options =>
     options.UseSqlServer(connectionString));
 
-builder.Services.AddDefaultIdentity<User>(options => options.SignIn.RequireConfirmedAccount = true).AddEntityFrameworkStores<Clinic22180011Context>();
-
-// 3. Identity with Roles (Exercise 11 requirement)
-builder.Services.AddIdentity<IdentityUser, IdentityRole>()
-    .AddRoleManager<RoleManager<IdentityRole>>()
+builder.Services.AddDefaultIdentity<User>(options => {
+    options.SignIn.RequireConfirmedAccount = false;
+    options.Password.RequireDigit = false;
+    options.Password.RequiredLength = 6;
+    options.Password.RequireNonAlphanumeric = false;
+    options.Password.RequireUppercase = false;
+    options.Password.RequireLowercase = false;
+})
+    .AddRoles<IdentityRole>() // Важно за ролите!
     .AddEntityFrameworkStores<Clinic22180011Context>()
-    .AddDefaultUI()
     .AddDefaultTokenProviders();
 
 // Add services to the container.
