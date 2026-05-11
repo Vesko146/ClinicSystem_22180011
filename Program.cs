@@ -20,7 +20,7 @@ builder.Services.AddDefaultIdentity<User>(options => {
     options.Password.RequireUppercase = false;
     options.Password.RequireLowercase = false;
 })
-    .AddRoles<IdentityRole>() // Важно за ролите!
+    .AddRoles<IdentityRole>() // пїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ!
     .AddEntityFrameworkStores<Clinic22180011Context>()
     .AddDefaultTokenProviders();
 

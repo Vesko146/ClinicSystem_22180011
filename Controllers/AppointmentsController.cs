@@ -38,37 +38,38 @@ namespace ClinicSystem_22180011.Controllers
             return View();
         }
 
-        // СТЪПКА 2: Показване на часовете (Синьо/Сиво)
         [Authorize(Roles = "Patient")]
-        [Authorize(Roles = "Patient")]
-        public async Task<IActionResult> AvailableSlots(int doctorId, DateTime date)
+        public async Task<IActionResult> AvailableSlots(int doctorId, DateTime? date)
         {
-            // 1. Вземаме заетите часове от базата
+            // Ако doctorId е 0, значи нещо се е объркало и го върни пациента към избора
+            if (doctorId == 0)
+            {
+                return RedirectToAction("ChooseDoctor", "Patients");
+            }
+            DateTime selectedDate = date ?? DateTime.Today;
+
             var takenSlots = await _context.Appointments
-                .Where(a => a.DoctorId == doctorId && a.AppointmentDate.Date == date.Date)
+                .Where(a => a.DoctorId == doctorId && a.AppointmentDate.Date == selectedDate.Date)
                 .Select(a => a.AppointmentDate)
                 .ToListAsync();
 
-            // 2. Генерираме всички възможни 15-минутни слотове за работния ден
             var allSlots = new List<DateTime>();
-            var startTime = date.Date.AddHours(8); // Започваме в 08:00
-            var endTime = date.Date.AddHours(17);   // Приключваме в 17:00
+            var currentSlot = selectedDate.Date.AddHours(8); 
+            var endOfDay = selectedDate.Date.AddHours(17);  
 
-            while (startTime < endTime)
+            while (currentSlot < endOfDay)
             {
-                allSlots.Add(startTime);
-                startTime = startTime.AddMinutes(15); // На всеки 15 минути
+                allSlots.Add(currentSlot);
+                currentSlot = currentSlot.AddMinutes(15);
             }
 
             ViewBag.DoctorId = doctorId;
-            ViewBag.SelectedDate = date;
-            ViewBag.AllSlots = allSlots;      // Всички часове
-            ViewBag.TakenSlots = takenSlots;  // Само заетите
+            ViewBag.SelectedDate = selectedDate;
+            ViewBag.TakenSlots = takenSlots;
 
-            return View();
+            return View(allSlots); 
         }
-
-        // СТЪПКА 3: Финален запис и проверка за дублиране (Race Condition)
+      
         [HttpPost]
         [Authorize(Roles = "Patient")]
         public async Task<IActionResult> Book(int doctorId, DateTime slot)

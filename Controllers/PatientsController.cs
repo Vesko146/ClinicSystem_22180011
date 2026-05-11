@@ -186,23 +186,22 @@ namespace ClinicSystem_22180011.Controllers
             return View();
         }
 
-        // POST: Patients/ChooseDoctor
         [HttpPost]
         [Authorize(Roles = "Patient")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> ChooseDoctor(int chosenDoctorId)
         {
             var currentUserId = _userManager.GetUserId(User);
-
-            // Намираме записа на текущия пациент в таблицата Patients чрез неговия UserId
             var patient = await _context.Patients.FirstOrDefaultAsync(p => p.UserId == currentUserId);
 
             if (patient != null)
             {
-                patient.ChosenDoctorId = chosenDoctorId; 
+                patient.ChosenDoctorId = chosenDoctorId;
                 _context.Update(patient);
                 await _context.SaveChangesAsync();
-                TempData["Message"] = "Успешно избрахте лекуващ лекар!";
+                TempData["Message"] = "Успешно избрахте лекуващ лекар! Сега изберете час.";
+
+                return RedirectToAction("AvailableSlots", "Appointments", new { doctorId = chosenDoctorId });
             }
 
             return RedirectToAction("Index", "Home");
