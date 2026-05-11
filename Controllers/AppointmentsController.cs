@@ -40,17 +40,30 @@ namespace ClinicSystem_22180011.Controllers
 
         // СТЪПКА 2: Показване на часовете (Синьо/Сиво)
         [Authorize(Roles = "Patient")]
+        [Authorize(Roles = "Patient")]
         public async Task<IActionResult> AvailableSlots(int doctorId, DateTime date)
         {
-            // Вземаме вече заетите часове от базата
+            // 1. Вземаме заетите часове от базата
             var takenSlots = await _context.Appointments
                 .Where(a => a.DoctorId == doctorId && a.AppointmentDate.Date == date.Date)
                 .Select(a => a.AppointmentDate)
                 .ToListAsync();
 
+            // 2. Генерираме всички възможни 15-минутни слотове за работния ден
+            var allSlots = new List<DateTime>();
+            var startTime = date.Date.AddHours(8); // Започваме в 08:00
+            var endTime = date.Date.AddHours(17);   // Приключваме в 17:00
+
+            while (startTime < endTime)
+            {
+                allSlots.Add(startTime);
+                startTime = startTime.AddMinutes(15); // На всеки 15 минути
+            }
+
             ViewBag.DoctorId = doctorId;
             ViewBag.SelectedDate = date;
-            ViewBag.TakenSlots = takenSlots;
+            ViewBag.AllSlots = allSlots;      // Всички часове
+            ViewBag.TakenSlots = takenSlots;  // Само заетите
 
             return View();
         }

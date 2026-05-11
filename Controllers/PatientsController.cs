@@ -11,7 +11,7 @@ using System.Threading.Tasks;
 
 namespace ClinicSystem_22180011.Controllers
 {
-    [Authorize(Roles = "Admin")] // Само админ вижда списъка с всички пациенти
+    
     public class PatientsController : Controller
     {
         private readonly Clinic22180011Context _context;
@@ -199,7 +199,7 @@ namespace ClinicSystem_22180011.Controllers
 
             if (patient != null)
             {
-                patient.ChosenDoctorId = chosenDoctorId; // Тук приемаме, че си добавил това поле в модела Patient
+                patient.ChosenDoctorId = chosenDoctorId; 
                 _context.Update(patient);
                 await _context.SaveChangesAsync();
                 TempData["Message"] = "Успешно избрахте лекуващ лекар!";

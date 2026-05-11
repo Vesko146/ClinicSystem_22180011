@@ -1,15 +1,27 @@
-﻿@foreach (var hour in new[] { "08:00", "09:00", "10:00", "11:00" }) // Примерни часове
-{
-    var currentSlot = ViewBag.SelectedDate.Add(TimeSpan.Parse(hour));
-    bool isTaken = ((List<DateTime>)ViewBag.TakenSlots).Contains(currentSlot);
-
-    if (isTaken)
-    {
-        <button class="btn btn-secondary disabled">@hour (Заето)</button>
-    }
-    else
-    {
-        <a asp-action="Book" asp-route-doctorId="@ViewBag.DoctorId" asp-route-slot="@currentSlot"
-           class="btn btn-primary">@hour (Свободно)</a>
-    }
+﻿@model IEnumerable<DateTime>
+@{
+    var allSlots = ViewBag.AllSlots as List<DateTime>;
+    var takenSlots = ViewBag.TakenSlots as List<DateTime>;
 }
+
+<div class="row">
+    @foreach (var slot in allSlots)
+    {
+        bool isTaken = takenSlots.Any(ts => ts.TimeOfDay == slot.TimeOfDay);
+
+        <div class="col-md-2 mb-2">
+            @if (isTaken)
+            {
+                <button class="btn btn-secondary w-100" disabled>@slot.ToString("HH:mm") (Зает)</button>
+            }
+            else
+            {
+                <form asp-action="Book" method="post">
+                    <input type="hidden" name="doctorId" value="@ViewBag.DoctorId" />
+                    <input type="hidden" name="slot" value="@slot.ToString("yyyy-MM-dd HH:mm")" />
+                    <button type="submit" class="btn btn-primary w-100">@slot.ToString("HH:mm")</button>
+                </form>
+            }
+        </div>
+    }
+</div>
