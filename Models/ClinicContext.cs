@@ -137,24 +137,7 @@ public partial class ClinicContext : DbContext
             entity.Property(e => e.RoleName).HasMaxLength(50);
         });
 
-        modelBuilder.Entity<User>(entity =>
-        {
-            entity.HasKey(e => e.UserId).HasName("PK__Users__1788CCACFB44F69C");
-
-            entity.ToTable("Users", "22180011");
-
-            entity.Property(e => e.UserId).HasColumnName("UserID");
-            entity.Property(e => e.LastModified22180011)
-                .HasDefaultValueSql("(getdate())")
-                .HasColumnType("datetime")
-                .HasColumnName("LastModified_22180011");
-            entity.Property(e => e.RoleId).HasColumnName("RoleID");
-            entity.Property(e => e.Username).HasMaxLength(50);
-
-            entity.HasOne(d => d.Role).WithMany(p => p.Users)
-                .HasForeignKey(d => d.RoleId)
-                .HasConstraintName("FK__Users__RoleID__4E88ABD4");
-        });
+       
 
         modelBuilder.Entity<ViewDoctorSchedule>(entity =>
         {

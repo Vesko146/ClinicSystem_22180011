@@ -9,8 +9,8 @@ namespace ClinicSystem_22180011.Models
     {
         [NotMapped]
         public int UserId { get; set; }
-
-    public string Username { get; set; } = null!;
+        [NotMapped]
+        public string Username { get; set; } = null!;
 
     public string PasswordHash { get; set; } = null!;
 
@@ -19,7 +19,7 @@ namespace ClinicSystem_22180011.Models
 
         [NotMapped]
         public DateTime? LastModified22180011 { get; set; }
-
-    public virtual Role? Role { get; set; }
+        [NotMapped]
+        public virtual Role? Role { get; set; }
     }
 }
