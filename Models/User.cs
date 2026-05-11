@@ -19,6 +19,7 @@ namespace ClinicSystem_22180011.Models
 
         [NotMapped]
         public DateTime? LastModified22180011 { get; set; }
+       
         [NotMapped]
         public virtual Role? Role { get; set; }
     }

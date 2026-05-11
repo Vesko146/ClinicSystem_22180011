@@ -4,7 +4,6 @@ using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 
-
 namespace ClinicSystem_22180011.Models
 {
     public partial class Clinic22180011Context : IdentityDbContext<User>
@@ -19,30 +18,24 @@ namespace ClinicSystem_22180011.Models
         }
 
         public virtual DbSet<Appointment> Appointments { get; set; }
-
         public virtual DbSet<Doctor> Doctors { get; set; }
-
         public virtual DbSet<ExamDetail> ExamDetails { get; set; }
-
         public virtual DbSet<Log22180011> Log22180011s { get; set; }
-
         public virtual DbSet<Patient> Patients { get; set; }
-
-        public virtual DbSet<Role> Roles { get; set; }
-
         public virtual DbSet<ViewDoctorSchedule> ViewDoctorSchedules { get; set; }
 
-        protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
 
+        protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
             => optionsBuilder.UseSqlServer("Server=DESKTOP-OASI1O7\\MSSQLSERVER01;Database=Clinic_22180011;Trusted_Connection=True; TrustServerCertificate=True");
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
+            // ЗАДЪЛЖИТЕЛНО: Извикваме базовия метод, за да се заредят Identity таблиците
             base.OnModelCreating(modelBuilder);
+
             modelBuilder.Entity<Appointment>(entity =>
             {
                 entity.HasKey(e => e.AppointId).HasName("PK__Appointm__DCC1C95971A93C2F");
-
                 entity.ToTable("Appointments", "22180011", tb => tb.HasTrigger("trg_LogAppointments"));
 
                 entity.Property(e => e.AppointId).HasColumnName("AppointID");
@@ -67,7 +60,6 @@ namespace ClinicSystem_22180011.Models
             modelBuilder.Entity<Doctor>(entity =>
             {
                 entity.HasKey(e => e.DoctorId).HasName("PK__Doctors__2DC00EDFD9124C4F");
-
                 entity.ToTable("Doctors", "22180011", tb => tb.HasTrigger("trg_LogDoctors"));
 
                 entity.Property(e => e.DoctorId).HasColumnName("DoctorID");
@@ -76,13 +68,11 @@ namespace ClinicSystem_22180011.Models
                     .HasDefaultValueSql("(getdate())")
                     .HasColumnType("datetime")
                     .HasColumnName("LastModified_22180011");
-
             });
 
             modelBuilder.Entity<ExamDetail>(entity =>
             {
                 entity.HasKey(e => e.DetailId).HasName("PK__ExamDeta__135C314D1BC0F75F");
-
                 entity.ToTable("ExamDetails", "22180011", tb => tb.HasTrigger("trg_LogExamDetails"));
 
                 entity.Property(e => e.DetailId).HasColumnName("DetailID");
@@ -100,7 +90,6 @@ namespace ClinicSystem_22180011.Models
             modelBuilder.Entity<Log22180011>(entity =>
             {
                 entity.HasKey(e => e.LogId).HasName("PK__log_2218__5E5499A83F1D9785");
-
                 entity.ToTable("log_22180011", "22180011");
 
                 entity.Property(e => e.LogId).HasColumnName("LogID");
@@ -114,7 +103,6 @@ namespace ClinicSystem_22180011.Models
             modelBuilder.Entity<Patient>(entity =>
             {
                 entity.HasKey(e => e.PatientId).HasName("PK__Patients__970EC346CD79073D");
-
                 entity.ToTable("Patients", "22180011", tb => tb.HasTrigger("trg_LogPatients"));
 
                 entity.Property(e => e.PatientId).HasColumnName("PatientID");
@@ -127,24 +115,10 @@ namespace ClinicSystem_22180011.Models
                 entity.Property(e => e.Phone).HasMaxLength(20);
             });
 
-            modelBuilder.Entity<Role>(entity =>
-            {
-                entity.HasKey(e => e.RoleId).HasName("PK__Roles__8AFACE3A369964A3");
-
-                entity.ToTable("Roles", "22180011");
-
-                entity.Property(e => e.RoleId).HasColumnName("RoleID");
-                entity.Property(e => e.RoleName).HasMaxLength(50);
-            });
-
-
 
             modelBuilder.Entity<ViewDoctorSchedule>(entity =>
             {
-                entity
-                    .HasNoKey()
-                    .ToView("View_DoctorSchedule", "22180011");
-
+                entity.HasNoKey().ToView("View_DoctorSchedule", "22180011");
                 entity.Property(e => e.AppointmentDate).HasColumnType("datetime");
                 entity.Property(e => e.DoctorName).HasMaxLength(100);
                 entity.Property(e => e.PatientName).HasMaxLength(101);

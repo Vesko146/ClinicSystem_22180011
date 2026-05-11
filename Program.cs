@@ -1,3 +1,4 @@
+using ClinicSystem_22180011.Data;
 using ClinicSystem_22180011.Models;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -45,7 +46,7 @@ app.UseAuthorization();
 
 app.MapStaticAssets();
 
-app.MapRazorPages(); 
+app.MapRazorPages();
 
 app.MapControllerRoute(
     name: "default",
@@ -54,7 +55,16 @@ app.MapControllerRoute(
 
 using (var scope = app.Services.CreateScope())
 {
-    await ClinicSystem_22180011.Data.DbInitializer.SeedRolesAndUsers(scope.ServiceProvider);
+    var services = scope.ServiceProvider;
+    try
+    {
+       
+        await DbInitializer.SeedRolesAndUsers(services);
+    }
+    catch (Exception ex)
+    {       
+        var logger = services.GetRequiredService<ILogger<Program>>();
+        logger.LogError(ex, "Възникна грешка при запълването на базата (Seeding).");
+    }
 }
-
 app.Run();
