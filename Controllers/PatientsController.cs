@@ -1,5 +1,6 @@
 ﻿using ClinicSystem_22180011.Models;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
@@ -14,16 +15,43 @@ namespace ClinicSystem_22180011.Controllers
     public class PatientsController : Controller
     {
         private readonly Clinic22180011Context _context;
+        private readonly UserManager<User> _userManager;
 
-        public PatientsController(Clinic22180011Context context)
+        public PatientsController(Clinic22180011Context context, UserManager<User> userManager)
         {
             _context = context;
+            _userManager = userManager;
         }
 
         // GET: Patients
+        [Authorize(Roles = "Admin,Doctor")]
         public async Task<IActionResult> Index()
         {
-            return View(await _context.Patients.ToListAsync());
+            // 1. Вземаме текущия логнат потребител
+            var currentUserId = _userManager.GetUserId(User);
+
+            // 2. Ако е Админ - вижда всичко
+            if (User.IsInRole("Admin"))
+            {
+                return View(await _context.Patients.ToListAsync());
+            }
+
+            // 3. Ако е Лекар - вижда само тези, които са го избрали
+            if (User.IsInRole("Doctor"))
+            {
+                // Първо намираме кой е този лекар в нашата таблица Doctors
+                var doctor = await _context.Doctors.FirstOrDefaultAsync(d => d.UserId == currentUserId);
+
+                if (doctor != null)
+                {
+                    var myPatients = await _context.Patients
+                        .Where(p => p.ChosenDoctorId == doctor.DoctorId)
+                        .ToListAsync();
+                    return View(myPatients);
+                }
+            }
+
+            return View(new List<Patient>()); // Ако е обикновен пациент, не вижда нищо
         }
 
         // GET: Patients/Details/5
@@ -149,6 +177,36 @@ namespace ClinicSystem_22180011.Controllers
 
             await _context.SaveChangesAsync();
             return RedirectToAction(nameof(Index));
+        }
+
+        [Authorize(Roles = "Patient")]
+        public async Task<IActionResult> ChooseDoctor()
+        {
+            // Вземаме списък с всички лекари за падащото меню
+            ViewBag.Doctors = new SelectList(await _context.Doctors.ToListAsync(), "DoctorId", "FullName");
+            return View();
+        }
+
+        // POST: Patients/ChooseDoctor
+        [HttpPost]
+        [Authorize(Roles = "Patient")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ChooseDoctor(int chosenDoctorId)
+        {
+            var currentUserId = _userManager.GetUserId(User);
+
+            // Намираме записа на текущия пациент в таблицата Patients чрез неговия UserId
+            var patient = await _context.Patients.FirstOrDefaultAsync(p => p.UserId == currentUserId);
+
+            if (patient != null)
+            {
+                patient.ChosenDoctorId = chosenDoctorId; // Тук приемаме, че си добавил това поле в модела Patient
+                _context.Update(patient);
+                await _context.SaveChangesAsync();
+                TempData["Message"] = "Успешно избрахте лекуващ лекар!";
+            }
+
+            return RedirectToAction("Index", "Home");
         }
 
         private bool PatientExists(int id)

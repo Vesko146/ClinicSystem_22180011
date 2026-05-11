@@ -1,0 +1,14 @@
+﻿@model ClinicSystem_22180011.Models.Patient
+
+<h2>Изберете Вашия лекар</h2>
+
+<form asp-action="ChooseDoctor" method="post">
+    <div class="form-group">
+        <label class="control-label">Лекар:</label>
+        <select name="chosenDoctorId" class="form-control" asp-items="ViewBag.Doctors">
+            <option value="">-- Изберете лекар --</option>
+        </select>
+    </div>
+    <br />
+    <button type="submit" class="btn btn-primary">Запази избора</button>
+</form>

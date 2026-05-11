@@ -115,18 +115,37 @@ namespace ClinicSystem_22180011.Areas.Identity.Pages.Account
         {
             returnUrl ??= Url.Content("~/");
             ExternalLogins = (await _signInManager.GetExternalAuthenticationSchemesAsync()).ToList();
+
             if (ModelState.IsValid)
             {
-                var user = CreateUser();
+                var user = CreateUser(); // Тук се създава обекта от тип User
 
                 await _userStore.SetUserNameAsync(user, Input.Email, CancellationToken.None);
                 await _emailStore.SetEmailAsync(user, Input.Email, CancellationToken.None);
+
                 var result = await _userManager.CreateAsync(user, Input.Password);
 
                 if (result.Succeeded)
                 {
                     _logger.LogInformation("User created a new account with password.");
 
+                    // 1. Присвояваме роля "Patient"
+                    await _userManager.AddToRoleAsync(user, "Patient");
+
+                    // 2. Създаваме записа в таблица Patients
+                    var patient = new Patient
+                    {
+                        FirstName = "Нов", // Можеш по-късно да добавиш полета в Input модела
+                        LastName = Input.Email,
+                        Phone = "0000000000",
+                        UserId = user.Id, // ТОВА Е КЛЮЧЪТ! Свързваме Identity с таблица Patients
+                        LastModified22180011 = DateTime.Now
+                    };
+
+                    _context.Patients.Add(patient);
+                    await _context.SaveChangesAsync();
+
+                    // Генериране на токени и имейл (стандартно)
                     var userId = await _userManager.GetUserIdAsync(user);
                     var code = await _userManager.GenerateEmailConfirmationTokenAsync(user);
                     code = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(code));
@@ -146,41 +165,16 @@ namespace ClinicSystem_22180011.Areas.Identity.Pages.Account
                     else
                     {
                         await _signInManager.SignInAsync(user, isPersistent: false);
-                        if (result.Succeeded)
-                        {
-                            await _signInManager.SignInAsync(user, isPersistent: false);
-
-                            // 1. Даваме роля "Patient" на всеки нов потребител
-                            await _userManager.AddToRoleAsync(user, "Patient");
-
-                            // 2. Създаваме запис в твоята таблица Patients
-                            // Тук използваме Input.Email, за да знаем кой е този човек
-                            var patient = new Patient
-                            {
-                                FirstName = "Нов",
-                                LastName = Input.Email,
-                                Phone = "0000000000",
-                                // Трябва да запишем имейла някъде, ако имаш такова поле, 
-                                // или да ползваме името му за връзка.
-                            };
-
-                            // ВАЖНО: Увери се, че в този файл имаш дефиниран _context (твоя Clinic22180011Context)
-                            _context.Patients.Add(patient);
-                            await _context.SaveChangesAsync();
-
-                            _logger.LogInformation("Потребителят е регистриран и добавен като Пациент.");
-                            return LocalRedirect(returnUrl);
-                        }
                         return LocalRedirect(returnUrl);
                     }
                 }
+
                 foreach (var error in result.Errors)
                 {
                     ModelState.AddModelError(string.Empty, error.Description);
                 }
             }
 
-            // If we got this far, something failed, redisplay form
             return Page();
         }
 

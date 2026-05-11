@@ -15,9 +15,9 @@ namespace ClinicSystem_22180011.Controllers
     public class DoctorsController : Controller
     {
         private readonly Clinic22180011Context _context;
-        private readonly UserManager<IdentityUser> _userManager;
+        private readonly UserManager<User> _userManager;
 
-        public DoctorsController(Clinic22180011Context context, UserManager<IdentityUser> userManager)
+        public DoctorsController(Clinic22180011Context context, UserManager<User> userManager)
         {
             _context = context;
             _userManager = userManager;
@@ -69,20 +69,20 @@ namespace ClinicSystem_22180011.Controllers
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Create(string FullName, string Email, string Password)
         {
-            // 1. Създаваме потребителски акаунт (за Identity)
-            var user = new IdentityUser { UserName = Email, Email = Email, EmailConfirmed = true };
+          
+            var user = new User { UserName = Email, Email = Email, EmailConfirmed = true };
+
+            
             var result = await _userManager.CreateAsync(user, Password);
 
             if (result.Succeeded)
             {
-                // 2. Даваме му роля "Doctor"
                 await _userManager.AddToRoleAsync(user, "Doctor");
 
-                // 3. Записваме го в нашата таблица с лекари
                 var doctor = new Doctor
                 {
                     FullName = FullName,
-                    UserId = user.Id // Свързваме ги
+                    UserId = user.Id
                 };
 
                 _context.Doctors.Add(doctor);
@@ -91,12 +91,11 @@ namespace ClinicSystem_22180011.Controllers
                 return RedirectToAction(nameof(Index));
             }
 
-            // Ако има грешка (напр. слаба парола), ще я покаже
             foreach (var error in result.Errors)
             {
                 ModelState.AddModelError(string.Empty, error.Description);
             }
-            return View();
+            return View();  
         }
 
         // GET: Doctors/Edit/5

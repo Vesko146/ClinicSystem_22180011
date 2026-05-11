@@ -16,9 +16,9 @@ namespace ClinicSystem_22180011.Controllers
     public class AppointmentsController : Controller
     {
         private readonly Clinic22180011Context _context;
-        private readonly UserManager<IdentityUser> _userManager;
+        private readonly UserManager<User> _userManager;
 
-        public AppointmentsController(Clinic22180011Context context, UserManager<IdentityUser> userManager)
+        public AppointmentsController(Clinic22180011Context context, UserManager<User> userManager)
         {
             _context = context;
             _userManager = userManager;
