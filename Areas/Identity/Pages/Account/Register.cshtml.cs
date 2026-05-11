@@ -2,6 +2,16 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 #nullable disable
 
+using ClinicSystem_22180011.Models;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.UI.Services;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.RazorPages;
+using Microsoft.AspNetCore.WebUtilities;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
@@ -10,15 +20,6 @@ using System.Text;
 using System.Text.Encodings.Web;
 using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Authentication;
-using Microsoft.AspNetCore.Authorization;
-using ClinicSystem_22180011.Models;
-using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Identity.UI.Services;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.RazorPages;
-using Microsoft.AspNetCore.WebUtilities;
-using Microsoft.Extensions.Logging;
 
 namespace ClinicSystem_22180011.Areas.Identity.Pages.Account
 {
@@ -30,13 +31,15 @@ namespace ClinicSystem_22180011.Areas.Identity.Pages.Account
         private readonly IUserEmailStore<User> _emailStore;
         private readonly ILogger<RegisterModel> _logger;
         private readonly IEmailSender _emailSender;
+        private readonly Clinic22180011Context _context;
 
         public RegisterModel(
             UserManager<User> userManager,
             IUserStore<User> userStore,
             SignInManager<User> signInManager,
             ILogger<RegisterModel> logger,
-            IEmailSender emailSender)
+            IEmailSender emailSender,
+            Clinic22180011Context context)
         {
             _userManager = userManager;
             _userStore = userStore;
@@ -44,6 +47,7 @@ namespace ClinicSystem_22180011.Areas.Identity.Pages.Account
             _signInManager = signInManager;
             _logger = logger;
             _emailSender = emailSender;
+            _context = context;
         }
 
         /// <summary>
@@ -142,6 +146,31 @@ namespace ClinicSystem_22180011.Areas.Identity.Pages.Account
                     else
                     {
                         await _signInManager.SignInAsync(user, isPersistent: false);
+                        if (result.Succeeded)
+                        {
+                            await _signInManager.SignInAsync(user, isPersistent: false);
+
+                            // 1. Даваме роля "Patient" на всеки нов потребител
+                            await _userManager.AddToRoleAsync(user, "Patient");
+
+                            // 2. Създаваме запис в твоята таблица Patients
+                            // Тук използваме Input.Email, за да знаем кой е този човек
+                            var patient = new Patient
+                            {
+                                FirstName = "Нов",
+                                LastName = Input.Email,
+                                Phone = "0000000000",
+                                // Трябва да запишем имейла някъде, ако имаш такова поле, 
+                                // или да ползваме името му за връзка.
+                            };
+
+                            // ВАЖНО: Увери се, че в този файл имаш дефиниран _context (твоя Clinic22180011Context)
+                            _context.Patients.Add(patient);
+                            await _context.SaveChangesAsync();
+
+                            _logger.LogInformation("Потребителят е регистриран и добавен като Пациент.");
+                            return LocalRedirect(returnUrl);
+                        }
                         return LocalRedirect(returnUrl);
                     }
                 }

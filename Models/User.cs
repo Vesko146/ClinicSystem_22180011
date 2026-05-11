@@ -1,10 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
+using Microsoft.AspNetCore.Identity;
 
-namespace ClinicSystem_22180011.Models;
-
-public partial class User
+namespace ClinicSystem_22180011.Models
 {
+    public class User : IdentityUser
+    {
     public int UserId { get; set; }
 
     public string Username { get; set; } = null!;
@@ -16,4 +17,5 @@ public partial class User
     public DateTime? LastModified22180011 { get; set; }
 
     public virtual Role? Role { get; set; }
+    }
 }
