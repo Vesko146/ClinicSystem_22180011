@@ -1,20 +1,24 @@
-﻿using System;
+﻿using Microsoft.AspNetCore.Identity;
+using System;
 using System.Collections.Generic;
-using Microsoft.AspNetCore.Identity;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace ClinicSystem_22180011.Models
 {
     public class User : IdentityUser
     {
-    public int UserId { get; set; }
+        [NotMapped]
+        public int UserId { get; set; }
 
     public string Username { get; set; } = null!;
 
     public string PasswordHash { get; set; } = null!;
 
-    public int? RoleId { get; set; }
+        [NotMapped]
+        public int? RoleId { get; set; }
 
-    public DateTime? LastModified22180011 { get; set; }
+        [NotMapped]
+        public DateTime? LastModified22180011 { get; set; }
 
     public virtual Role? Role { get; set; }
     }
