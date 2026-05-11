@@ -24,7 +24,7 @@ namespace ClinicSystem_22180011.Controllers
         }
 
         // GET: Doctors
-        [Authorize(Roles = "Admin,Doctor")]
+        [Authorize(Roles = "Admin,Patient")]
         public async Task<IActionResult> Index(string searchString)
         {
             var doctors = from d in _context.Doctors select d;

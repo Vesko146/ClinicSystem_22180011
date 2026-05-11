@@ -1,8 +1,4 @@
-﻿// Licensed to the .NET Foundation under one or more agreements.
-// The .NET Foundation licenses this file to you under the MIT license.
-#nullable disable
-
-using ClinicSystem_22180011.Models;
+﻿using ClinicSystem_22180011.Models;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
@@ -31,7 +27,7 @@ namespace ClinicSystem_22180011.Areas.Identity.Pages.Account
         private readonly IUserEmailStore<User> _emailStore;
         private readonly ILogger<RegisterModel> _logger;
         private readonly IEmailSender _emailSender;
-        private readonly Clinic22180011Context _context;
+        private readonly ClinicSystem_22180011.Models.Clinic22180011Context _context;
 
         public RegisterModel(
             UserManager<User> userManager,
@@ -39,7 +35,7 @@ namespace ClinicSystem_22180011.Areas.Identity.Pages.Account
             SignInManager<User> signInManager,
             ILogger<RegisterModel> logger,
             IEmailSender emailSender,
-            Clinic22180011Context context)
+            ClinicSystem_22180011.Models.Clinic22180011Context context)
         {
             _userManager = userManager;
             _userStore = userStore;
@@ -50,54 +46,39 @@ namespace ClinicSystem_22180011.Areas.Identity.Pages.Account
             _context = context;
         }
 
-        /// <summary>
-        ///     This API supports the ASP.NET Core Identity default UI infrastructure and is not intended to be used
-        ///     directly from your code. This API may change or be removed in future releases.
-        /// </summary>
         [BindProperty]
         public InputModel Input { get; set; }
 
-        /// <summary>
-        ///     This API supports the ASP.NET Core Identity default UI infrastructure and is not intended to be used
-        ///     directly from your code. This API may change or be removed in future releases.
-        /// </summary>
         public string ReturnUrl { get; set; }
 
-        /// <summary>
-        ///     This API supports the ASP.NET Core Identity default UI infrastructure and is not intended to be used
-        ///     directly from your code. This API may change or be removed in future releases.
-        /// </summary>
         public IList<AuthenticationScheme> ExternalLogins { get; set; }
 
-        /// <summary>
-        ///     This API supports the ASP.NET Core Identity default UI infrastructure and is not intended to be used
-        ///     directly from your code. This API may change or be removed in future releases.
-        /// </summary>
         public class InputModel
         {
-            /// <summary>
-            ///     This API supports the ASP.NET Core Identity default UI infrastructure and is not intended to be used
-            ///     directly from your code. This API may change or be removed in future releases.
-            /// </summary>
+            [Required]
+            [Display(Name = "Име")]
+            public string FirstName { get; set; }
+
+            [Required]
+            [Display(Name = "Фамилия")]
+            public string LastName { get; set; }
+
+            [Required]
+            [Phone]
+            [Display(Name = "Телефон")]
+            public string Phone { get; set; }
+
             [Required]
             [EmailAddress]
             [Display(Name = "Email")]
             public string Email { get; set; }
 
-            /// <summary>
-            ///     This API supports the ASP.NET Core Identity default UI infrastructure and is not intended to be used
-            ///     directly from your code. This API may change or be removed in future releases.
-            /// </summary>
             [Required]
             [StringLength(100, ErrorMessage = "The {0} must be at least {2} and at max {1} characters long.", MinimumLength = 6)]
             [DataType(DataType.Password)]
             [Display(Name = "Password")]
             public string Password { get; set; }
 
-            /// <summary>
-            ///     This API supports the ASP.NET Core Identity default UI infrastructure and is not intended to be used
-            ///     directly from your code. This API may change or be removed in future releases.
-            /// </summary>
             [DataType(DataType.Password)]
             [Display(Name = "Confirm password")]
             [Compare("Password", ErrorMessage = "The password and confirmation password do not match.")]
@@ -135,11 +116,11 @@ namespace ClinicSystem_22180011.Areas.Identity.Pages.Account
                     // 2. Създаваме записа в таблица Patients
                     var patient = new Patient
                     {
-                        FirstName = "Нов", // Можеш по-късно да добавиш полета в Input модела
-                        LastName = Input.Email,
-                        Phone = "0000000000",
-                        UserId = user.Id, // ТОВА Е КЛЮЧЪТ! Свързваме Identity с таблица Patients
-                        LastModified22180011 = DateTime.Now
+                        FirstName = Input.FirstName, // Вземаме истинското име
+                        LastName = Input.LastName,   // Вземаме истинската фамилия
+                        Phone = Input.Phone,         // Вземаме истинския телефон
+                        UserId = user.Id,            // Свързваме с акаунта
+                        
                     };
 
                     _context.Patients.Add(patient);

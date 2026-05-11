@@ -1,5 +1,9 @@
 ﻿@model ClinicSystem_22180011.Models.Patient
 
+@if (TempData["Message"] != null)
+{
+    <div class="alert alert-success">@TempData["Message"]</div>
+}
 <h2>Изберете Вашия лекар</h2>
 
 <form asp-action="ChooseDoctor" method="post">

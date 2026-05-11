@@ -107,10 +107,7 @@ namespace ClinicSystem_22180011.Models
 
                 entity.Property(e => e.PatientId).HasColumnName("PatientID");
                 entity.Property(e => e.FirstName).HasMaxLength(50);
-                entity.Property(e => e.LastModified22180011)
-                    .HasDefaultValueSql("(getdate())")
-                    .HasColumnType("datetime")
-                    .HasColumnName("LastModified_22180011");
+                
                 entity.Property(e => e.LastName).HasMaxLength(50);
                 entity.Property(e => e.Phone).HasMaxLength(20);
             });
