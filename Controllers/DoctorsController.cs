@@ -67,12 +67,9 @@ namespace ClinicSystem_22180011.Controllers
         [HttpPost]
         [ValidateAntiForgeryToken]
         [Authorize(Roles = "Admin")]
-        public async Task<IActionResult> Create(string FullName, string Email, string Password)
-        {
-          
-            var user = new User { UserName = Email, Email = Email, EmailConfirmed = true };
-
-            
+        public async Task<IActionResult> Create(string FullName, string Email, string Password, string ScheduleGroup)
+        {       
+            var user = new User { UserName = Email, Email = Email, EmailConfirmed = true };          
             var result = await _userManager.CreateAsync(user, Password);
 
             if (result.Succeeded)
@@ -82,7 +79,8 @@ namespace ClinicSystem_22180011.Controllers
                 var doctor = new Doctor
                 {
                     FullName = FullName,
-                    UserId = user.Id
+                    UserId = user.Id,
+                    ScheduleGroup = ScheduleGroup
                 };
 
                 _context.Doctors.Add(doctor);
@@ -120,7 +118,7 @@ namespace ClinicSystem_22180011.Controllers
         [HttpPost]
         [ValidateAntiForgeryToken]
         [Authorize(Roles = "Admin")]
-        public async Task<IActionResult> Edit(int id, [Bind("DoctorId,FullName,Specialty,LastModified22180011")] Doctor doctor)
+        public async Task<IActionResult> Edit(int id, [Bind("DoctorId,FullName,Specialty,ScheduleGroup,LastModified22180011")] Doctor doctor)
         {
             if (id != doctor.DoctorId)
             {

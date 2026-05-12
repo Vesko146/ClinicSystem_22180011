@@ -24,12 +24,34 @@ namespace ClinicSystem_22180011.Controllers
             _userManager = userManager;
         }
 
-        // Това показва списъка с всички часове, за да не дава 404
+
         public async Task<IActionResult> Index()
         {
-            var context = _context.Appointments.Include(a => a.Doctor).Include(a => a.Patient);
-            return View(await context.ToListAsync());
+            var userId = _userManager.GetUserId(User);
+
+            var query = _context.Appointments
+                .Include(a => a.Doctor)
+                .Include(a => a.Patient)
+                .AsQueryable();
+
+            if (User.IsInRole("Patient"))
+            {
+                query = query.Where(a => a.Patient.UserId == userId);
+            }
+            else if (User.IsInRole("Doctor"))
+            {
+                query = query.Where(a => a.Doctor.UserId == userId);
+            }
+           
+            var appointments = await query
+                .OrderByDescending(a => a.AppointmentDate >= DateTime.Now)
+                .ThenBy(a => a.AppointmentDate)
+                .ToListAsync();
+
+            return View(appointments);
         }
+
+
         // СТЪПКА 1: Пациентът избира лекар (Падащо меню)
         [Authorize(Roles = "Patient")]
         public async Task<IActionResult> SelectDoctor()
@@ -41,35 +63,71 @@ namespace ClinicSystem_22180011.Controllers
         [Authorize(Roles = "Patient")]
         public async Task<IActionResult> AvailableSlots(int doctorId, DateTime? date)
         {
-            // Ако doctorId е 0, значи нещо се е объркало и го върни пациента към избора
-            if (doctorId == 0)
-            {
-                return RedirectToAction("ChooseDoctor", "Patients");
-            }
+            if (doctorId == 0) return RedirectToAction("ChooseDoctor", "Patients");
+
             DateTime selectedDate = date ?? DateTime.Today;
+            var dayOfWeek = selectedDate.DayOfWeek;
+
+            // Вземаме лекаря, за да видим коя смяна е
+            var doctor = await _context.Doctors.FindAsync(doctorId);
+
+            int startHour = 0;
+            int endHour = 0;
+
+            // ЛОГИКА ЗА ГРАФИЦИТЕ
+            if (doctor.ScheduleGroup == "Alpha")
+            {
+                // Понеделник и Сряда: Цял ден (08:00 - 17:00)
+                if (dayOfWeek == DayOfWeek.Monday || dayOfWeek == DayOfWeek.Wednesday)
+                {
+                    startHour = 8; endHour = 17;
+                }
+                // Петък: Само сутрин (08:00 - 12:00)
+                else if (dayOfWeek == DayOfWeek.Friday)
+                {
+                    startHour = 8; endHour = 12;
+                }
+            }
+            else if (doctor.ScheduleGroup == "Beta")
+            {
+                // Вторник и Четвъртък: Цял ден (08:00 - 17:00)
+                if (dayOfWeek == DayOfWeek.Tuesday || dayOfWeek == DayOfWeek.Thursday)
+                {
+                    startHour = 8; endHour = 17;
+                }
+                // Петък: Само следобед (13:00 - 17:00)
+                else if (dayOfWeek == DayOfWeek.Friday)
+                {
+                    startHour = 13; endHour = 17;
+                }
+            }
+
+            var allSlots = new List<DateTime>();
+            if (startHour != 0)
+            {
+                var currentSlot = selectedDate.Date.AddHours(startHour);
+                var endOfDay = selectedDate.Date.AddHours(endHour);
+                while (currentSlot < endOfDay)
+                {
+                    allSlots.Add(currentSlot);
+                    currentSlot = currentSlot.AddMinutes(15);
+                }
+            }
 
             var takenSlots = await _context.Appointments
                 .Where(a => a.DoctorId == doctorId && a.AppointmentDate.Date == selectedDate.Date)
                 .Select(a => a.AppointmentDate)
                 .ToListAsync();
 
-            var allSlots = new List<DateTime>();
-            var currentSlot = selectedDate.Date.AddHours(8); 
-            var endOfDay = selectedDate.Date.AddHours(17);  
-
-            while (currentSlot < endOfDay)
-            {
-                allSlots.Add(currentSlot);
-                currentSlot = currentSlot.AddMinutes(15);
-            }
-
             ViewBag.DoctorId = doctorId;
             ViewBag.SelectedDate = selectedDate;
             ViewBag.TakenSlots = takenSlots;
+            ViewBag.IsWorkingDay = (startHour != 0);
+             ViewBag.DoctorName = doctor.FullName;
 
-            return View(allSlots); 
+            return View(allSlots);
         }
-      
+
         [HttpPost]
         [Authorize(Roles = "Patient")]
         public async Task<IActionResult> Book(int doctorId, DateTime slot)

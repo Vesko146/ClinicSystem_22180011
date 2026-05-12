@@ -1,59 +1,60 @@
 ﻿@model IEnumerable<ClinicSystem_22180011.Models.Appointment>
 
 @{
-    ViewData["Title"] = "Index";
+    ViewData["Title"] = "Моите Прегледи";
 }
 
-<h1>Index</h1>
+<h1>Списък с прегледи</h1>
 
 <p>
-    <a asp-action="Create">Create New</a>
+    <a asp-controller="Patients" asp-action="ChooseDoctor" class="btn btn-primary">Запиши нов час</a>
 </p>
-<table class="table">
+
+<table class="table table-hover">
     <thead>
         <tr>
-            <th>
-                @Html.DisplayNameFor(model => model.AppointmentDate)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Status)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.LastModified22180011)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Doctor)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Patient)
-            </th>
-            <th></th>
+            <th>Дата и час</th>
+            <th>Статус</th>
+            <th>Лекар</th>
+            <th>Пациент</th>
+            <th>Действия</th>
         </tr>
     </thead>
     <tbody>
-@foreach (var item in Model) {
-        <tr>
-            <td>
-                @Html.DisplayFor(modelItem => item.AppointmentDate)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.Status)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.LastModified22180011)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.Doctor.DoctorId)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.Patient.PatientId)
-            </td>
-            <td>
-                <a asp-action="Edit" asp-route-id="@item.AppointId">Edit</a> |
-                <a asp-action="Details" asp-route-id="@item.AppointId">Details</a> |
-                <a asp-action="Delete" asp-route-id="@item.AppointId">Delete</a>
-            </td>
-        </tr>
-}
+        @foreach (var item in Model)
+        {
+            // Проверка дали часът е минал за по-блед цвят на реда
+            string rowClass = item.AppointmentDate < DateTime.Now ? "table-light text-muted" : "";
+
+            <tr class="@rowClass">
+                <td>
+                    <strong>@item.AppointmentDate.ToString("dd.MM.yyyy HH:mm")</strong>
+                </td>
+                <td>
+                    @if (item.AppointmentDate < DateTime.Now)
+                    {
+                        <span class="badge bg-secondary">Приключил</span>
+                    }
+                    else
+                    {
+                        <span class="badge bg-success">Предстоящ</span>
+                    }
+                </td>
+                <td>
+                    @item.Doctor.FullName @* Показваме името, не ID-то *@
+                </td>
+                <td>
+                    @item.Patient.FirstName @item.Patient.LastName @* Име на пациента *@
+                </td>
+                <td>
+                    <a asp-action="Details" asp-route-id="@item.AppointmentId" class="btn btn-sm btn-info">Детайли</a>
+                    @if (User.IsInRole("Admin") || item.AppointmentDate > DateTime.Now)
+                    {
+                        <span> | </span>
+                        <a asp-action="Delete" asp-route-id="@item.AppointmentId" class="btn btn-sm btn-danger">Откажи</a>
+                    }
+                </td>
+            </tr>
+        }
     </tbody>
 </table>

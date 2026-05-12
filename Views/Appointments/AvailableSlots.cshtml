@@ -4,7 +4,7 @@
     var takenSlots = ViewBag.TakenSlots as List<DateTime>;
 }
 
-<h2>Свободни часове за д-р @ViewBag.DoctorId</h2>
+<h2>Свободни часове за @ViewBag.DoctorName</h2>
 <p>Текущо избрана дата: <strong>@ViewBag.SelectedDate.ToShortDateString()</strong></p>
 
 <div class="row mb-4">
@@ -26,31 +26,41 @@
 
 <hr />
 
-<div class="row">
-    @foreach (var slot in Model)
-    {
-        bool isTaken = takenSlots != null && takenSlots.Any(ts => ts == slot);
+@if (ViewBag.IsWorkingDay == false)
+{
+    <div class="alert alert-warning text-center mt-4">
+        <h4>Лекарят не работи на тази дата (@ViewBag.SelectedDate.ToShortDateString()).</h4>
+        <p>Моля, изберете друг ден от календара по-горе.</p>
+    </div>
+}
+else
+{
+    <div class="row">
+        @foreach (var slot in Model)
+        {
+            bool isTaken = takenSlots != null && takenSlots.Any(ts => ts == slot);
 
-        <div class="col-md-2 mb-3">
-            @if (isTaken)
-            {
-                <button class="btn btn-secondary w-100" disabled>
-                    @slot.ToString("HH:mm") <br /> (Зает)
-                </button>
-            }
-            else
-            {
-                <form asp-action="Book" method="post">
-                    <input type="hidden" name="doctorId" value="@ViewBag.DoctorId" />
-                    <input type="hidden" name="slot" value="@slot.ToString("yyyy-MM-dd HH:mm")" />
-                    <button type="submit" class="btn btn-outline-primary w-100">
-                        @slot.ToString("HH:mm")
+            <div class="col-md-2 mb-3">
+                @if (isTaken)
+                {
+                    <button class="btn btn-secondary w-100" disabled>
+                        @slot.ToString("HH:mm") <br /> (Зает)
                     </button>
-                </form>
-            }
-        </div>
-    }
-</div>
+                }
+                else
+                {
+                    <form asp-action="Book" method="post">
+                        <input type="hidden" name="doctorId" value="@ViewBag.DoctorId" />
+                        <input type="hidden" name="slot" value="@slot.ToString("yyyy-MM-dd HH:mm")" />
+                        <button type="submit" class="btn btn-outline-primary w-100">
+                            @slot.ToString("HH:mm")
+                        </button>
+                    </form>
+                }
+            </div>
+        }
+    </div>
+}
 
 <div class="mt-3">
     <a asp-controller="Patients" asp-action="ChooseDoctor" class="btn btn-outline-secondary">

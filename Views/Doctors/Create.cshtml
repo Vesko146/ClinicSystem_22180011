@@ -30,6 +30,14 @@
                 <small class="form-text text-muted">Минимум 6 символа, цифра и специален знак.</small>
             </div>
 
+            <div class="form-group mb-3">
+                <label class="control-label">Работен график</label>
+                <select asp-for="ScheduleGroup" class="form-control">
+                    <option value="Alpha">Schedule Alpha (Пон, Ср, Пт - Сутрин)</option>
+                    <option value="Beta">Schedule Beta (Вт, Чт, Пт - Следобед)</option>
+                </select>
+            </div>
+
             <br />
             <div class="form-group">
                 <input type="submit" value="Създай Лекар и Профил" class="btn btn-primary" />
