@@ -7,7 +7,7 @@
 <h1>Списък с прегледи</h1>
 
 <p>
-    <a asp-controller="Patients" asp-action="ChooseDoctor" class="btn btn-primary">Запиши нов час</a>
+    <a asp-action="SelectDoctor" class="btn btn-primary">Запиши нов час</a>
 </p>
 
 <table class="table table-hover">
@@ -23,7 +23,6 @@
     <tbody>
         @foreach (var item in Model)
         {
-            // Проверка дали часът е минал за по-блед цвят на реда
             string rowClass = item.AppointmentDate < DateTime.Now ? "table-light text-muted" : "";
 
             <tr class="@rowClass">
@@ -41,17 +40,18 @@
                     }
                 </td>
                 <td>
-                    @item.Doctor.FullName @* Показваме името, не ID-то *@
+                    @(item.Doctor?.FullName ?? "Няма информация")
                 </td>
                 <td>
-                    @item.Patient.FirstName @item.Patient.LastName @* Име на пациента *@
+                    @(item.Patient != null ? $"{item.Patient.FirstName} {item.Patient.LastName}" : "Няма информация")
                 </td>
                 <td>
-                    <a asp-action="Details" asp-route-id="@item.AppointmentId" class="btn btn-sm btn-info">Детайли</a>
+                    <a asp-action="Details" asp-route-id="@item.AppointId" class="btn btn-sm btn-info">Детайли</a>
+
                     @if (User.IsInRole("Admin") || item.AppointmentDate > DateTime.Now)
                     {
                         <span> | </span>
-                        <a asp-action="Delete" asp-route-id="@item.AppointmentId" class="btn btn-sm btn-danger">Откажи</a>
+                        <a asp-action="Delete" asp-route-id="@item.AppointId" class="btn btn-sm btn-danger">Откажи</a>
                     }
                 </td>
             </tr>

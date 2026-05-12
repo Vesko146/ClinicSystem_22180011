@@ -109,7 +109,10 @@ namespace ClinicSystem_22180011.Controllers
                 var endOfDay = selectedDate.Date.AddHours(endHour);
                 while (currentSlot < endOfDay)
                 {
-                    allSlots.Add(currentSlot);
+                    if (currentSlot > DateTime.Now.AddHours(1))
+                    {
+                        allSlots.Add(currentSlot);
+                    }
                     currentSlot = currentSlot.AddMinutes(15);
                 }
             }
