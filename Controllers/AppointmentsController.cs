@@ -33,7 +33,6 @@ namespace ClinicSystem_22180011.Controllers
                 .Include(a => a.Patient)
                 .AsQueryable();
 
-            // Филтрация по роли (твоята оригинална логика)
             if (User.IsInRole("Patient"))
             {
                 query = query.Where(a => a.Patient.UserId == userId);
@@ -43,7 +42,6 @@ namespace ClinicSystem_22180011.Controllers
                 query = query.Where(a => a.Doctor.UserId == userId);
             }
 
-            // Търсене (ако е въведено нещо)
             if (!string.IsNullOrEmpty(searchString))
             {
                 query = query.Where(a => a.Doctor.FullName.Contains(searchString)
@@ -53,12 +51,27 @@ namespace ClinicSystem_22180011.Controllers
 
             ViewData["CurrentFilter"] = searchString;
 
-            var appointments = await query
+            var finalAppointments = await query
                 .OrderByDescending(a => a.AppointmentDate >= DateTime.Now)
                 .ThenBy(a => a.AppointmentDate)
                 .ToListAsync();
 
-            return View(appointments);
+            foreach (var app in finalAppointments)
+            {
+                if (app.Status != "Cancelled")
+                {
+                    if (app.AppointmentDate < DateTime.Now)
+                    {
+                        app.Status = "Completed";
+                    }
+                    else
+                    {
+                        app.Status = "Upcoming";
+                    }
+                }
+            }
+
+            return View(finalAppointments);
         }
 
         // ДЕТАЙЛИ: Работи с твоя AppointId
@@ -119,7 +132,6 @@ namespace ClinicSystem_22180011.Controllers
                 var endOfDay = selectedDate.Date.AddHours(endHour);
                 while (currentSlot < endOfDay)
                 {
-                    // Твоята защита от 1 час
                     if (currentSlot > DateTime.Now.AddHours(1))
                     {
                         allSlots.Add(currentSlot);
@@ -203,7 +215,7 @@ namespace ClinicSystem_22180011.Controllers
             var userId = _userManager.GetUserId(User);
             if (User.IsInRole("Patient") && appointment.Patient?.UserId != userId)
             {
-                return Forbid(); // Не можеш да триеш чужд час
+                return Forbid(); 
             }
 
             return View(appointment);
@@ -219,6 +231,20 @@ namespace ClinicSystem_22180011.Controllers
             if (appointment != null)
             {
                 _context.Appointments.Remove(appointment);
+                await _context.SaveChangesAsync();
+            }
+            return RedirectToAction(nameof(Index));
+        }
+
+
+        [HttpPost]
+        [Authorize(Roles = "Admin,Patient")]
+        public async Task<IActionResult> Cancel(int id)
+        {
+            var appointment = await _context.Appointments.FindAsync(id);
+            if (appointment != null)
+            {
+                appointment.Status = "Cancelled";
                 await _context.SaveChangesAsync();
             }
             return RedirectToAction(nameof(Index));
@@ -243,24 +269,33 @@ namespace ClinicSystem_22180011.Controllers
             var appointments = await query.ToListAsync();
 
             var builder = new System.Text.StringBuilder();
+      
             builder.AppendLine("Дата и час;Статус;Лекар;Пациент");
 
             foreach (var item in appointments)
             {
-                string date = item.AppointmentDate.ToString("dd.MM.yyyy HH:mm");
+                string dateStr = item.AppointmentDate.ToString("dd.MM.yyyy HH:mm");
                 string doctor = item.Doctor?.FullName ?? "Няма информация";
                 string patient = item.Patient != null ? $"{item.Patient.FirstName} {item.Patient.LastName}" : "Няма информация";
 
-                string statusBg = item.Status switch
+                // Уеднаквена логика за превод в Excel
+                string statusBg = "";
+                if (item.Status == "Cancelled")
                 {
-                    "Confirmed" => "Потвърден",
-                    "Completed" => "Завършен",
-                    "Cancelled" => "Отказан",
-                    _ => item.Status 
-                };
+                    statusBg = "Отказан";
+                }
+                else if (item.AppointmentDate < DateTime.Now)
+                {
+                    statusBg = "Приключил";
+                }
+                else
+                {
+                    statusBg = "Предстоящ";
+                }
 
-                builder.AppendLine($"{date};{statusBg};{doctor};{patient}");
+                builder.AppendLine($"{dateStr};{statusBg};{doctor};{patient}");
             }
+
 
             var bom = new byte[] { 0xEF, 0xBB, 0xBF };
             var content = System.Text.Encoding.UTF8.GetBytes(builder.ToString());

@@ -61,15 +61,20 @@
                     <strong>@item.AppointmentDate.ToString("dd.MM.yyyy HH:mm")</strong>
                 </td>
                 <td>
-                    @if (item.AppointmentDate < DateTime.Now)
+                    @if (item.Status == "Cancelled")
                     {
-                        <span class="badge bg-secondary">Приключил</span>
+                        <span class="badge bg-secondary">Отказан</span>
+                    }
+                    else if (item.AppointmentDate < DateTime.Now)
+                    {
+                        <span class="badge bg-light text-dark border">Приключил</span>
                     }
                     else
                     {
                         <span class="badge bg-success">Предстоящ</span>
                     }
                 </td>
+
                 <td>
                     @(item.Doctor?.FullName ?? "Няма информация")
                 </td>
@@ -77,12 +82,20 @@
                     @(item.Patient != null ? $"{item.Patient.FirstName} {item.Patient.LastName}" : "Няма информация")
                 </td>
                 <td>
-                    <a asp-action="Details" asp-route-id="@item.AppointId" class="btn btn-sm btn-info">Детайли</a>
+                    <a asp-action="Details" asp-route-id="@item.AppointId" class="btn btn-sm btn-info text-white">Детайли</a>
 
-                    @if ((User.IsInRole("Patient") || User.IsInRole("Admin")) && item.AppointmentDate > DateTime.Now)
+                    @if (item.Status != "Cancelled" && item.AppointmentDate > DateTime.Now)
                     {
-                        <span> | </span>
-                        <a asp-action="Delete" asp-route-id="@item.AppointId" class="btn btn-sm btn-danger">Откажи</a>
+                        @if (User.IsInRole("Patient") || User.IsInRole("Admin"))
+                        {
+                            <span> | </span>
+                            <form asp-action="Cancel" asp-route-id="@item.AppointId" method="post" style="display:inline;">
+                                <button type="submit" class="btn btn-sm btn-danger"
+                                        onclick="return confirm('Сигурни ли сте, че искате да откажете този час?')">
+                                    Откажи
+                                </button>
+                            </form>
+                        }
                     }
                 </td>
             </tr>
