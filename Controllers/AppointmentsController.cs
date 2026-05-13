@@ -228,10 +228,19 @@ namespace ClinicSystem_22180011.Controllers
         [Authorize(Roles = "Admin, Doctor")]
         public async Task<IActionResult> ExportToCSV()
         {
-            var appointments = await _context.Appointments
+            var userId = _userManager.GetUserId(User);
+
+            var query = _context.Appointments
                 .Include(a => a.Doctor)
                 .Include(a => a.Patient)
-                .ToListAsync();
+                .AsQueryable();
+
+            if (User.IsInRole("Doctor"))
+            {
+                query = query.Where(a => a.Doctor.UserId == userId);
+            }
+
+            var appointments = await query.ToListAsync();
 
             var builder = new System.Text.StringBuilder();
             builder.AppendLine("Дата и час;Статус;Лекар;Пациент");
@@ -242,7 +251,15 @@ namespace ClinicSystem_22180011.Controllers
                 string doctor = item.Doctor?.FullName ?? "Няма информация";
                 string patient = item.Patient != null ? $"{item.Patient.FirstName} {item.Patient.LastName}" : "Няма информация";
 
-                builder.AppendLine($"{date};{item.Status};{doctor};{patient}");
+                string statusBg = item.Status switch
+                {
+                    "Confirmed" => "Потвърден",
+                    "Completed" => "Завършен",
+                    "Cancelled" => "Отказан",
+                    _ => item.Status 
+                };
+
+                builder.AppendLine($"{date};{statusBg};{doctor};{patient}");
             }
 
             var bom = new byte[] { 0xEF, 0xBB, 0xBF };
