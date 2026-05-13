@@ -3,6 +3,9 @@ using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
+using System.Threading;
+using System.Threading.Tasks;
+using System.Linq;
 
 namespace ClinicSystem_22180011.Models
 {
@@ -110,6 +113,10 @@ namespace ClinicSystem_22180011.Models
                 
                 entity.Property(e => e.LastName).HasMaxLength(50);
                 entity.Property(e => e.Phone).HasMaxLength(20);
+                entity.Property(e => e.LastModified22180011)
+                .HasDefaultValueSql("(getdate())")
+                .HasColumnType("datetime")
+                .HasColumnName("LastModified_22180011");
             });
 
 
@@ -124,7 +131,25 @@ namespace ClinicSystem_22180011.Models
 
             OnModelCreatingPartial(modelBuilder);
         }
-
         partial void OnModelCreatingPartial(ModelBuilder modelBuilder);
+
+        public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
+        {
+            var entries = ChangeTracker
+                .Entries()
+                .Where(e => e.State == EntityState.Added || e.State == EntityState.Modified);
+
+            foreach (var entityEntry in entries)
+            {
+                var property = entityEntry.Metadata.FindProperty("LastModified22180011");
+                if (property != null)
+                {
+                    entityEntry.Property("LastModified22180011").CurrentValue = DateTime.Now;
+                }
+            }
+
+            return base.SaveChangesAsync(cancellationToken);
+        }
     }
+
 }

@@ -176,8 +176,8 @@ namespace ClinicSystem_22180011.Controllers
                 .OrderByDescending(a => a.LastModified22180011)
                 .FirstOrDefaultAsync();
 
-            if (lastAppoint != null && lastAppoint.LastModified22180011.HasValue &&
-                DateTime.Now.Subtract(lastAppoint.LastModified22180011.Value).TotalSeconds < 30)
+            if (lastAppoint != null &&
+    DateTime.Now.Subtract(lastAppoint.LastModified22180011).TotalSeconds < 30)
             {
                 TempData["Error"] = "Моля, изчакайте 30 секунди преди следващата заявка.";
                 return RedirectToAction(nameof(Index));

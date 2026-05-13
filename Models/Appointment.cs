@@ -15,7 +15,7 @@ public partial class Appointment
 
     public string? Status { get; set; }
 
-    public DateTime? LastModified22180011 { get; set; }
+    public DateTime LastModified22180011 { get; set; }
 
     public virtual Doctor? Doctor { get; set; }
 

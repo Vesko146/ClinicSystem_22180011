@@ -4,6 +4,7 @@ using ClinicSystem_22180011.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace ClinicSystem_22180011.Migrations
 {
     [DbContext(typeof(Clinic22180011Context))]
-    partial class Clinic22180011ContextModelSnapshot : ModelSnapshot
+    [Migration("20260513191813_UpdateLastModified_22180011")]
+    partial class UpdateLastModified_22180011
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
