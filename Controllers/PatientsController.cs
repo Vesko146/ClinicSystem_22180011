@@ -25,33 +25,41 @@ namespace ClinicSystem_22180011.Controllers
 
         // GET: Patients
         [Authorize(Roles = "Admin,Doctor")]
-        public async Task<IActionResult> Index()
+        public async Task<IActionResult> Index(string searchString)
         {
-            // 1. Вземаме текущия логнат потребител
             var currentUserId = _userManager.GetUserId(User);
 
-            // 2. Ако е Админ - вижда всичко
-            if (User.IsInRole("Admin"))
+            var query = _context.Patients.AsQueryable();
+
+            if (!string.IsNullOrEmpty(searchString))
             {
-                return View(await _context.Patients.ToListAsync());
+                var search = searchString.ToLower();
+
+                query = query.Where(p => p.FirstName.ToLower().Contains(search)
+                                      || p.LastName.ToLower().Contains(search)
+                                      || p.Phone.Contains(search)); 
             }
 
-            // 3. Ако е Лекар - вижда само тези, които са го избрали
+            ViewData["CurrentFilter"] = searchString;
+
+            if (User.IsInRole("Admin"))
+            {
+                return View(await query.ToListAsync());
+            }
+
             if (User.IsInRole("Doctor"))
             {
-                // Първо намираме кой е този лекар в нашата таблица Doctors
                 var doctor = await _context.Doctors.FirstOrDefaultAsync(d => d.UserId == currentUserId);
-
                 if (doctor != null)
                 {
-                    var myPatients = await _context.Patients
+                    var myPatients = await query
                         .Where(p => p.ChosenDoctorId == doctor.DoctorId)
                         .ToListAsync();
                     return View(myPatients);
                 }
             }
 
-            return View(new List<Patient>()); 
+            return View(new List<Patient>());
         }
 
         // GET: Patients/Details/5

@@ -24,7 +24,7 @@ namespace ClinicSystem_22180011.Controllers
             _userManager = userManager;
         }
 
-        public async Task<IActionResult> Index()
+        public async Task<IActionResult> Index(string searchString)
         {
             var userId = _userManager.GetUserId(User);
 
@@ -33,6 +33,7 @@ namespace ClinicSystem_22180011.Controllers
                 .Include(a => a.Patient)
                 .AsQueryable();
 
+            // Филтрация по роли (твоята оригинална логика)
             if (User.IsInRole("Patient"))
             {
                 query = query.Where(a => a.Patient.UserId == userId);
@@ -41,6 +42,16 @@ namespace ClinicSystem_22180011.Controllers
             {
                 query = query.Where(a => a.Doctor.UserId == userId);
             }
+
+            // Търсене (ако е въведено нещо)
+            if (!string.IsNullOrEmpty(searchString))
+            {
+                query = query.Where(a => a.Doctor.FullName.Contains(searchString)
+                                      || a.Patient.FirstName.Contains(searchString)
+                                      || a.Patient.LastName.Contains(searchString));
+            }
+
+            ViewData["CurrentFilter"] = searchString;
 
             var appointments = await query
                 .OrderByDescending(a => a.AppointmentDate >= DateTime.Now)
@@ -176,6 +187,7 @@ namespace ClinicSystem_22180011.Controllers
             return RedirectToAction(nameof(Index)); 
         }
 
+
         [Authorize(Roles = "Patient,Admin")]
         public async Task<IActionResult> Delete(int? id)
         {
@@ -197,6 +209,7 @@ namespace ClinicSystem_22180011.Controllers
             return View(appointment);
         }
 
+
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
         [Authorize(Roles = "Patient,Admin")]
@@ -209,6 +222,34 @@ namespace ClinicSystem_22180011.Controllers
                 await _context.SaveChangesAsync();
             }
             return RedirectToAction(nameof(Index));
+        }
+
+
+        [Authorize(Roles = "Admin, Doctor")]
+        public async Task<IActionResult> ExportToCSV()
+        {
+            var appointments = await _context.Appointments
+                .Include(a => a.Doctor)
+                .Include(a => a.Patient)
+                .ToListAsync();
+
+            var builder = new System.Text.StringBuilder();
+            builder.AppendLine("Дата и час;Статус;Лекар;Пациент");
+
+            foreach (var item in appointments)
+            {
+                string date = item.AppointmentDate.ToString("dd.MM.yyyy HH:mm");
+                string doctor = item.Doctor?.FullName ?? "Няма информация";
+                string patient = item.Patient != null ? $"{item.Patient.FirstName} {item.Patient.LastName}" : "Няма информация";
+
+                builder.AppendLine($"{date};{item.Status};{doctor};{patient}");
+            }
+
+            var bom = new byte[] { 0xEF, 0xBB, 0xBF };
+            var content = System.Text.Encoding.UTF8.GetBytes(builder.ToString());
+            var finalFile = bom.Concat(content).ToArray();
+
+            return File(finalFile, "text/csv", "pregledi_export.csv");
         }
     }
 }

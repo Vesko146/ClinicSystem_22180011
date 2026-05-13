@@ -7,7 +7,10 @@
 <h1>Index</h1>
 
 <p>
-    <a asp-action="Create">Create New</a>
+    @if (User.IsInRole("Admin"))
+    {
+        <a asp-action="Create" class="btn btn-primary">Добави нов лекар</a>
+    }
 </p>
 <form asp-action="Index" method="get">
     <div class="form-actions no-color">
@@ -32,30 +35,26 @@
         </tr>
     </thead>
     <tbody>
-@foreach (var item in Model) {
-        <tr>
-            <td>
-                @Html.DisplayFor(modelItem => item.FullName)
-            </td>
-           
-            <td>
-                @Html.DisplayFor(modelItem => item.LastModified22180011)
-            </td>
-            <td>
-            @if (User.IsInRole("Admin"))
-            {
-            <a asp-action="Edit" asp-route-id="@item.DoctorId">Редактирай</a> <span> | </span>
-            <a asp-action="Delete" asp-route-id="@item.DoctorId">Изтрий</a> <span> | </span>
-            }
-            <a asp-action="Details" asp-route-id="@item.DoctorId">Детайли</a>
+        @foreach (var item in Model)
+        {
+            <tr>
+                <td>@Html.DisplayFor(modelItem => item.FullName)</td>
+                <td>@Html.DisplayFor(modelItem => item.LastModified22180011)</td>
+                <td>
+                    @if (User.IsInRole("Admin"))
+                    {
+                        <a asp-action="Edit" asp-route-id="@item.DoctorId" class="btn btn-sm btn-warning">Редактирай</a>
+                        <a asp-action="Delete" asp-route-id="@item.DoctorId" class="btn btn-sm btn-danger">Изтрий</a>
+                    }
 
-            @if (User.IsInRole("Patient"))
-            {
-            <span> | </span>      
-            <a asp-controller="Appointments" asp-action="AvailableSlots" asp-route-doctorId="@item.DoctorId" class="btn btn-success btn-sm">Запиши час</a>
-            }
-            </td>
+                    <a asp-action="Details" asp-route-id="@item.DoctorId" class="btn btn-sm btn-info">Детайли</a>
+
+                    @if (User.IsInRole("Patient"))
+                    {
+                        <a asp-controller="Appointments" asp-action="AvailableSlots" asp-route-doctorId="@item.DoctorId" class="btn btn-sm btn-success">Запиши час</a>
+                    }
+                </td>
             </tr>
-            }
+        }
     </tbody>
 </table>
