@@ -4,10 +4,26 @@
     ViewData["Title"] = "Моите Прегледи";
 }
 
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        <strong>Грешка!</strong> @TempData["Error"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+
+@if (TempData["Success"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        <strong>Успех!</strong> @TempData["Success"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+
 <h1>Списък с прегледи</h1>
 
 <p>
-    <a asp-action="SelectDoctor" class="btn btn-primary">Запиши нов час</a>
+    <a asp-controller="Patients" asp-action="ChooseDoctor" class="btn btn-primary">Запиши нов час</a>
 </p>
 
 <table class="table table-hover">
@@ -48,7 +64,7 @@
                 <td>
                     <a asp-action="Details" asp-route-id="@item.AppointId" class="btn btn-sm btn-info">Детайли</a>
 
-                    @if (User.IsInRole("Admin") || item.AppointmentDate > DateTime.Now)
+                    @if ((User.IsInRole("Patient") || User.IsInRole("Admin")) && item.AppointmentDate > DateTime.Now)
                     {
                         <span> | </span>
                         <a asp-action="Delete" asp-route-id="@item.AppointId" class="btn btn-sm btn-danger">Откажи</a>

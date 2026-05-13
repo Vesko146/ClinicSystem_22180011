@@ -51,7 +51,7 @@ namespace ClinicSystem_22180011.Controllers
                 }
             }
 
-            return View(new List<Patient>()); // Ако е обикновен пациент, не вижда нищо
+            return View(new List<Patient>()); 
         }
 
         // GET: Patients/Details/5
@@ -110,9 +110,7 @@ namespace ClinicSystem_22180011.Controllers
             return View(patient);
         }
 
-        // POST: Patients/Edit/5
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
+
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(int id, [Bind("PatientId,FirstName,LastName,Phone,LastModified22180011")] Patient patient)
@@ -181,7 +179,6 @@ namespace ClinicSystem_22180011.Controllers
         [Authorize(Roles = "Patient")]
         public async Task<IActionResult> ChooseDoctor()
         {
-            // Вземаме списък с всички лекари за падащото меню
             ViewBag.Doctors = new SelectList(await _context.Doctors.ToListAsync(), "DoctorId", "FullName");
             return View();
         }
@@ -199,7 +196,6 @@ namespace ClinicSystem_22180011.Controllers
                 patient.ChosenDoctorId = chosenDoctorId;
                 _context.Update(patient);
                 await _context.SaveChangesAsync();
-                TempData["Message"] = "Успешно избрахте лекуващ лекар! Сега изберете час.";
 
                 return RedirectToAction("AvailableSlots", "Appointments", new { doctorId = chosenDoctorId });
             }

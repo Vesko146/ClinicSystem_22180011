@@ -42,11 +42,20 @@
                 @Html.DisplayFor(modelItem => item.LastModified22180011)
             </td>
             <td>
-                <a asp-action="Edit" asp-route-id="@item.DoctorId">Edit</a> |
-                <a asp-action="Details" asp-route-id="@item.DoctorId">Details</a> |
-                <a asp-action="Delete" asp-route-id="@item.DoctorId">Delete</a>
+            @if (User.IsInRole("Admin"))
+            {
+            <a asp-action="Edit" asp-route-id="@item.DoctorId">Редактирай</a> <span> | </span>
+            <a asp-action="Delete" asp-route-id="@item.DoctorId">Изтрий</a> <span> | </span>
+            }
+            <a asp-action="Details" asp-route-id="@item.DoctorId">Детайли</a>
+
+            @if (User.IsInRole("Patient"))
+            {
+            <span> | </span>      
+            <a asp-controller="Appointments" asp-action="AvailableSlots" asp-route-doctorId="@item.DoctorId" class="btn btn-success btn-sm">Запиши час</a>
+            }
             </td>
-        </tr>
-}
+            </tr>
+            }
     </tbody>
 </table>

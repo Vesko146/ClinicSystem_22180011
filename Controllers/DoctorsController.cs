@@ -11,7 +11,6 @@ using System.Threading.Tasks;
 
 namespace ClinicSystem_22180011.Controllers
 {
-    [Authorize(Roles = "Admin")]
     public class DoctorsController : Controller
     {
         private readonly Clinic22180011Context _context;
@@ -38,6 +37,7 @@ namespace ClinicSystem_22180011.Controllers
         }
 
         // GET: Doctors/Details/5
+        [Authorize(Roles = "Admin,Patient")]
         public async Task<IActionResult> Details(int? id)
         {
             if (id == null)

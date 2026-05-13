@@ -24,7 +24,6 @@ namespace ClinicSystem_22180011.Controllers
             _userManager = userManager;
         }
 
-
         public async Task<IActionResult> Index()
         {
             var userId = _userManager.GetUserId(User);
@@ -42,7 +41,7 @@ namespace ClinicSystem_22180011.Controllers
             {
                 query = query.Where(a => a.Doctor.UserId == userId);
             }
-           
+
             var appointments = await query
                 .OrderByDescending(a => a.AppointmentDate >= DateTime.Now)
                 .ThenBy(a => a.AppointmentDate)
@@ -51,55 +50,55 @@ namespace ClinicSystem_22180011.Controllers
             return View(appointments);
         }
 
+        // ДЕТАЙЛИ: Работи с твоя AppointId
+        public async Task<IActionResult> Details(int? id)
+        {
+            if (id == null) return NotFound();
 
-        // СТЪПКА 1: Пациентът избира лекар (Падащо меню)
+            var appointment = await _context.Appointments
+                .Include(a => a.Doctor)
+                .Include(a => a.Patient)
+                .FirstOrDefaultAsync(m => m.AppointId == id);
+
+            if (appointment == null) return NotFound();
+
+            // Сигурност: Само лекар/пациент на прегледа или Админ могат да виждат детайли
+            var userId = _userManager.GetUserId(User);
+            if (!User.IsInRole("Admin") && appointment.Doctor?.UserId != userId && appointment.Patient?.UserId != userId)
+            {
+                return Forbid();
+            }
+
+            return View(appointment);
+        }
+
         [Authorize(Roles = "Patient")]
         public async Task<IActionResult> SelectDoctor()
         {
-            ViewData["DoctorId"] = new SelectList(_context.Doctors, "DoctorId", "Name");
+            ViewData["DoctorId"] = new SelectList(_context.Doctors, "DoctorId", "FullName");
             return View();
         }
 
         [Authorize(Roles = "Patient")]
         public async Task<IActionResult> AvailableSlots(int doctorId, DateTime? date)
         {
-            if (doctorId == 0) return RedirectToAction("ChooseDoctor", "Patients");
+            if (doctorId == 0) return RedirectToAction("SelectDoctor");
 
             DateTime selectedDate = date ?? DateTime.Today;
             var dayOfWeek = selectedDate.DayOfWeek;
-
-            // Вземаме лекаря, за да видим коя смяна е
             var doctor = await _context.Doctors.FindAsync(doctorId);
 
-            int startHour = 0;
-            int endHour = 0;
+            int startHour = 0; int endHour = 0;
 
-            // ЛОГИКА ЗА ГРАФИЦИТЕ
             if (doctor.ScheduleGroup == "Alpha")
             {
-                // Понеделник и Сряда: Цял ден (08:00 - 17:00)
-                if (dayOfWeek == DayOfWeek.Monday || dayOfWeek == DayOfWeek.Wednesday)
-                {
-                    startHour = 8; endHour = 17;
-                }
-                // Петък: Само сутрин (08:00 - 12:00)
-                else if (dayOfWeek == DayOfWeek.Friday)
-                {
-                    startHour = 8; endHour = 12;
-                }
+                if (dayOfWeek == DayOfWeek.Monday || dayOfWeek == DayOfWeek.Wednesday) { startHour = 8; endHour = 17; }
+                else if (dayOfWeek == DayOfWeek.Friday) { startHour = 8; endHour = 12; }
             }
             else if (doctor.ScheduleGroup == "Beta")
             {
-                // Вторник и Четвъртък: Цял ден (08:00 - 17:00)
-                if (dayOfWeek == DayOfWeek.Tuesday || dayOfWeek == DayOfWeek.Thursday)
-                {
-                    startHour = 8; endHour = 17;
-                }
-                // Петък: Само следобед (13:00 - 17:00)
-                else if (dayOfWeek == DayOfWeek.Friday)
-                {
-                    startHour = 13; endHour = 17;
-                }
+                if (dayOfWeek == DayOfWeek.Tuesday || dayOfWeek == DayOfWeek.Thursday) { startHour = 8; endHour = 17; }
+                else if (dayOfWeek == DayOfWeek.Friday) { startHour = 13; endHour = 17; }
             }
 
             var allSlots = new List<DateTime>();
@@ -109,6 +108,7 @@ namespace ClinicSystem_22180011.Controllers
                 var endOfDay = selectedDate.Date.AddHours(endHour);
                 while (currentSlot < endOfDay)
                 {
+                    // Твоята защита от 1 час
                     if (currentSlot > DateTime.Now.AddHours(1))
                     {
                         allSlots.Add(currentSlot);
@@ -126,7 +126,7 @@ namespace ClinicSystem_22180011.Controllers
             ViewBag.SelectedDate = selectedDate;
             ViewBag.TakenSlots = takenSlots;
             ViewBag.IsWorkingDay = (startHour != 0);
-             ViewBag.DoctorName = doctor.FullName;
+            ViewBag.DoctorName = doctor.FullName;
 
             return View(allSlots);
         }
@@ -138,42 +138,77 @@ namespace ClinicSystem_22180011.Controllers
             var userId = _userManager.GetUserId(User);
             var patient = await _context.Patients.FirstOrDefaultAsync(p => p.UserId == userId);
 
+           
+            var existingAppointment = await _context.Appointments
+                .AnyAsync(a => a.PatientId == patient.PatientId && a.AppointmentDate >= DateTime.Now);
+
+            if (existingAppointment)
+            {
+                TempData["Error"] = "Вече имате записан час! Трябва първо да го откажете от списъка, ако искате да изберете нов лекар или време.";
+                return RedirectToAction(nameof(Index)); 
+            }
+
+            var lastAppoint = await _context.Appointments
+                .Where(a => a.PatientId == patient.PatientId)
+                .OrderByDescending(a => a.LastModified22180011)
+                .FirstOrDefaultAsync();
+
+            if (lastAppoint != null && lastAppoint.LastModified22180011.HasValue &&
+                DateTime.Now.Subtract(lastAppoint.LastModified22180011.Value).TotalSeconds < 30)
+            {
+                TempData["Error"] = "Моля, изчакайте 30 секунди преди следващата заявка.";
+                return RedirectToAction(nameof(Index));
+            }
+
             var newAppointment = new Appointment
             {
                 DoctorId = doctorId,
                 PatientId = patient.PatientId,
                 AppointmentDate = slot,
-                Status = "Confirmed"
+                Status = "Confirmed",
+                LastModified22180011 = DateTime.Now
             };
 
-            try
-            {
-                _context.Add(newAppointment);
-                await _context.SaveChangesAsync();
-                TempData["Success"] = "Часът е записан успешно!";
-            }
-            catch
-            {
-                // Ако уникалният индекс в SQL сработи, ще хвърли грешка тук
-                TempData["Error"] = "Упс! Този час току-що беше зает от друг пациент.";
-            }
+            _context.Add(newAppointment);
+            await _context.SaveChangesAsync();
 
-            return RedirectToAction("Index", "Home");
+            TempData["Success"] = "Часът е записан успешно!";
+            return RedirectToAction(nameof(Index)); 
         }
 
-        [Authorize(Roles = "Doctor")]
-        public async Task<IActionResult> MySchedule()
+        [Authorize(Roles = "Patient,Admin")]
+        public async Task<IActionResult> Delete(int? id)
         {
-            var userId = _userManager.GetUserId(User);
+            if (id == null) return NotFound();
 
-            // Филтрираме прегледите: само тези, които са за лекаря с това UserId
-            var myAppointments = await _context.Appointments
+            var appointment = await _context.Appointments
+                .Include(a => a.Doctor)
                 .Include(a => a.Patient)
-                .Where(a => a.Doctor.UserId == userId)
-                .OrderBy(a => a.AppointmentDate)
-                .ToListAsync();
+                .FirstOrDefaultAsync(m => m.AppointId == id);
 
-            return View(myAppointments);
+            if (appointment == null) return NotFound();
+
+            var userId = _userManager.GetUserId(User);
+            if (User.IsInRole("Patient") && appointment.Patient?.UserId != userId)
+            {
+                return Forbid(); // Не можеш да триеш чужд час
+            }
+
+            return View(appointment);
+        }
+
+        [HttpPost, ActionName("Delete")]
+        [ValidateAntiForgeryToken]
+        [Authorize(Roles = "Patient,Admin")]
+        public async Task<IActionResult> DeleteConfirmed(int id)
+        {
+            var appointment = await _context.Appointments.FindAsync(id);
+            if (appointment != null)
+            {
+                _context.Appointments.Remove(appointment);
+                await _context.SaveChangesAsync();
+            }
+            return RedirectToAction(nameof(Index));
         }
     }
 }
