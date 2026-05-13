@@ -23,8 +23,9 @@
 <h1>Списък с прегледи</h1>
 
 <p>
-    @if (User.IsInRole("Patient")){
-    <a asp-action="ChooseDoctor" asp-controller="Patients" class="btn btn-primary">Запиши нов час</a>
+    @if (User.IsInRole("Patient"))
+    {
+        <a asp-action="ChooseDoctor" asp-controller="Patients" class="btn btn-primary">Запиши нов час</a>
     }
     @if (User.IsInRole("Admin") || User.IsInRole("Doctor"))
     {
@@ -46,6 +47,7 @@
         <tr>
             <th>Дата и час</th>
             <th>Статус</th>
+            <th>LastModified22180011</th>
             <th>Лекар</th>
             <th>Пациент</th>
             <th>Действия</th>
@@ -74,7 +76,7 @@
                         <span class="badge bg-success">Предстоящ</span>
                     }
                 </td>
-
+                <td>@item.LastModified22180011.ToString("dd.MM.yyyy HH:mm")</td>
                 <td>
                     @(item.Doctor?.FullName ?? "Няма информация")
                 </td>

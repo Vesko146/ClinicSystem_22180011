@@ -28,6 +28,7 @@
             <th>@Html.DisplayNameFor(model => model.FirstName)</th>
             <th>@Html.DisplayNameFor(model => model.LastName)</th>
             <th>@Html.DisplayNameFor(model => model.Phone)</th>
+            <th>@Html.DisplayNameFor(model => model.LastModified22180011)</th>
             <th>Действия</th>
         </tr>
     </thead>
@@ -37,6 +38,7 @@
             <td>@Html.DisplayFor(modelItem => item.FirstName)</td>
             <td>@Html.DisplayFor(modelItem => item.LastName)</td>
             <td>@Html.DisplayFor(modelItem => item.Phone)</td>
+            <td>@item.LastModified22180011.ToString("dd.MM.yyyy HH:mm")</td>
             <td>
                 @if (User.IsInRole("Admin"))
                 {
