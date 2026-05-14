@@ -39,14 +39,18 @@
             <td>@Html.DisplayFor(modelItem => item.LastName)</td>
             <td>@Html.DisplayFor(modelItem => item.Phone)</td>
             <td>@item.LastModified22180011.ToString("dd.MM.yyyy HH:mm")</td>
-            <td>
-                @if (User.IsInRole("Admin"))
-                {
-                    <a asp-action="Edit" asp-route-id="@item.PatientId">Edit</a> @:|
-                    <a asp-action="Delete" asp-route-id="@item.PatientId">Delete</a> @:|
-                }
-                <a asp-action="Details" asp-route-id="@item.PatientId">Details</a>
-            </td>
+                <td>
+                    <div class="btn-group" role="group">
+                        <a asp-action="Details" asp-route-id="@item.PatientId" class="btn btn-sm btn-info text-white">Детайли</a>
+                        <a asp-action="MedicalHistory" asp-route-id="@item.PatientId" class="btn btn-sm btn-outline-primary">Досие</a>
+
+                        @if (User.IsInRole("Admin"))
+                        {
+                            <a asp-action="Edit" asp-route-id="@item.PatientId" class="btn btn-sm btn-warning">Редактирай</a>
+                            <a asp-action="Delete" asp-route-id="@item.PatientId" class="btn btn-sm btn-danger">Изтрий</a>
+                        }
+                    </div>
+                </td>
         </tr>
 }
     </tbody>

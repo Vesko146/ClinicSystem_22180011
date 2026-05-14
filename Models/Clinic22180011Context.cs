@@ -32,32 +32,68 @@ namespace ClinicSystem_22180011.Models
             => optionsBuilder.UseSqlServer("Server=DESKTOP-OASI1O7\\MSSQLSERVER01;Database=Clinic_22180011;Trusted_Connection=True; TrustServerCertificate=True");
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
+
         {
-            // ЗАДЪЛЖИТЕЛНО: Извикваме базовия метод, за да се заредят Identity таблиците
+
+
             base.OnModelCreating(modelBuilder);
 
-            modelBuilder.Entity<Appointment>(entity =>
+            modelBuilder.Entity<ExamDetail>(entity =>
+
             {
+
+                entity.ToTable("ExamDetails", "22180011"); 
+
+                entity.Property(e => e.LastModified22180011)
+
+                .HasColumnName("LastModified22180011"); 
+
+            });
+
+            modelBuilder.Entity<Appointment>(entity =>
+
+            {
+
                 entity.HasKey(e => e.AppointId).HasName("PK__Appointm__DCC1C95971A93C2F");
+
                 entity.ToTable("Appointments", "22180011", tb => tb.HasTrigger("trg_LogAppointments"));
 
+
+
                 entity.Property(e => e.AppointId).HasColumnName("AppointID");
+
                 entity.Property(e => e.AppointmentDate).HasColumnType("datetime");
+
                 entity.Property(e => e.DoctorId).HasColumnName("DoctorID");
+
                 entity.Property(e => e.LastModified22180011)
+
                     .HasDefaultValueSql("(getdate())")
+
                     .HasColumnType("datetime")
-                    .HasColumnName("LastModified_22180011");
+
+                    .HasColumnName("LastModified22180011");
+
                 entity.Property(e => e.PatientId).HasColumnName("PatientID");
+
                 entity.Property(e => e.Status).HasMaxLength(50);
 
+
+
                 entity.HasOne(d => d.Doctor).WithMany(p => p.Appointments)
+
                     .HasForeignKey(d => d.DoctorId)
+
                     .HasConstraintName("FK__Appointme__Docto__412EB0B6");
 
+
+
                 entity.HasOne(d => d.Patient).WithMany(p => p.Appointments)
+
                     .HasForeignKey(d => d.PatientId)
+
                     .HasConstraintName("FK__Appointme__Patie__403A8C7D");
+
             });
 
             modelBuilder.Entity<Doctor>(entity =>

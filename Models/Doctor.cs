@@ -13,7 +13,10 @@ public partial class Doctor
 
     public string? UserId { get; set; }
 
+    public string? Specialty { get; set; }
+
     public string? ScheduleGroup { get; set; }
+
 
     public virtual ICollection<Appointment> Appointments { get; set; } = new List<Appointment>();
 }

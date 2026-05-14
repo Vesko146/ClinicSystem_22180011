@@ -211,6 +211,20 @@ namespace ClinicSystem_22180011.Controllers
             return RedirectToAction("Index", "Home");
         }
 
+        [Authorize(Roles = "Admin, Doctor, Patient")]
+        public async Task<IActionResult> MedicalHistory(int id)
+        {
+            var history = await _context.Patients
+                .Include(p => p.Appointments)
+                    .ThenInclude(a => a.ExamDetails)
+                .Include(p => p.Appointments)
+                    .ThenInclude(a => a.Doctor)
+                .FirstOrDefaultAsync(p => p.PatientId == id);
+
+            if (history == null) return NotFound();
+
+            return View(history);
+        }
         private bool PatientExists(int id)
         {
             return _context.Patients.Any(e => e.PatientId == id);

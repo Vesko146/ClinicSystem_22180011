@@ -1,0 +1,35 @@
+﻿@model ClinicSystem_22180011.Models.Patient
+
+@{
+    ViewData["Title"] = "Медицинско досие";
+}
+
+<div class="container">
+    <h2 class="mb-4">Медицинско досие на @Model.FirstName @Model.LastName</h2>
+
+    @foreach (var app in Model.Appointments.OrderByDescending(a => a.AppointmentDate))
+    {
+        <div class="card mb-3 shadow-sm">
+            <div class="card-header @(app.Status == "Cancelled" ? "bg-light" : "bg-info text-white")">
+                <strong>Дата: @app.AppointmentDate.ToString("dd.MM.yyyy HH:mm")</strong>
+                | Лекар: @(app.Doctor?.FullName ?? "---")
+                <span class="float-end">Статус: @app.Status</span>
+            </div>
+            <div class="card-body">
+                @if (app.ExamDetails != null && app.ExamDetails.Any())
+                {
+                    @foreach (var detail in app.ExamDetails)
+                    {
+                        <p><strong>Диагноза:</strong> @detail.Diagnosis</p>
+                        <p><strong>Предписани лекарства:</strong> @detail.Prescription</p>
+                    }
+                }
+                else
+                {
+                    <p class="text-muted italic">Няма въведени медицински данни за този преглед.</p>
+                }
+            </div>
+        </div>
+    }
+    <a asp-action="Index" class="btn btn-secondary">Назад към списъка</a>
+</div>

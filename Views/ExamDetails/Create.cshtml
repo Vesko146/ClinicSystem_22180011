@@ -1,0 +1,29 @@
+﻿@model ClinicSystem_22180011.Models.ExamDetail
+
+@{
+    ViewData["Title"] = "Резултати от преглед";
+}
+
+<h2>Медицински картон на прегледа</h2>
+<h4>@ViewBag.AppointmentInfo</h4>
+<hr />
+
+<div class="row">
+    <div class="col-md-6">
+        <form asp-action="Create">
+            <input type="hidden" asp-for="AppointId" />
+            <div class="form-group mb-3">
+                <label class="control-label">Диагноза</label>
+                <textarea asp-for="Diagnosis" class="form-control" rows="3" placeholder="Пример: Катаракта на дясно око..."></textarea>
+            </div>
+            <div class="form-group mb-3">
+                <label class="control-label">Предписание (Рецепта)</label>
+                <textarea asp-for="Prescription" class="form-control" rows="3" placeholder="Пример: Очни капки 2х1..."></textarea>
+            </div>
+            <div class="form-group">
+                <button type="submit" class="btn btn-primary">Запиши в картона</button>
+                <a asp-controller="Appointments" asp-action="Index" class="btn btn-secondary">Назад</a>
+            </div>
+        </form>
+    </div>
+</div>

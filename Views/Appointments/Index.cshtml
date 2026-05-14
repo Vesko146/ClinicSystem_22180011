@@ -29,7 +29,11 @@
     }
     @if (User.IsInRole("Admin") || User.IsInRole("Doctor"))
     {
-        <a asp-action="ExportToCSV" class="btn btn-outline-success">Експорт в Excel (CSV)</a>
+        <a asp-action="ExportToCSV"
+           asp-route-searchString="@ViewData["CurrentFilter"]"
+           asp-route-searchDate="@ViewData["CurrentDate"]"
+           asp-route-sortOrder="@ViewData["CurrentSort"]"
+           class="btn btn-outline-success">Експорт в Excel (CSV)</a>
     }
 </p>
 
@@ -37,6 +41,7 @@
     <div class="input-group">
         <input type="text" name="searchString" class="form-control"
                placeholder="Търси по име на лекар или пациент..." value="@ViewData["CurrentFilter"]" />
+        <input type="date" name="searchDate" class="form-control" value="@ViewData["CurrentDate"]" />
         <button type="submit" class="btn btn-primary">Търси</button>
         <a asp-action="Index" class="btn btn-secondary">Изчисти</a>
     </div>
@@ -45,10 +50,20 @@
 <table class="table table-hover">
     <thead>
         <tr>
-            <th>Дата и час</th>
+            <th>
+                <a asp-action="Index"
+                   asp-route-sortOrder="@ViewData["DateSortParm"]"
+                   asp-route-searchString="@ViewData["CurrentFilter"]"
+                   asp-route-searchDate="@ViewData["CurrentDate"]">Дата и час</a>
+            </th>
             <th>Статус</th>
             <th>LastModified22180011</th>
-            <th>Лекар</th>
+            <th>
+                <a asp-action="Index"
+                   asp-route-sortOrder="@ViewData["NameSortParm"]"
+                   asp-route-searchString="@ViewData["CurrentFilter"]"
+                   asp-route-searchDate="@ViewData["CurrentDate"]">Лекар</a>
+            </th>
             <th>Пациент</th>
             <th>Действия</th>
         </tr>
@@ -85,6 +100,13 @@
                 </td>
                 <td>
                     <a asp-action="Details" asp-route-id="@item.AppointId" class="btn btn-sm btn-info text-white">Детайли</a>
+
+                    @if (User.IsInRole("Doctor") && item.AppointmentDate < DateTime.Now && item.Status != "Cancelled")
+                    {
+                        <span> | </span>
+                        <a asp-controller="ExamDetails" asp-action="Create" asp-route-appointId="@item.AppointId"
+                           class="btn btn-sm btn-success">Добави медицински данни</a>
+                    }
 
                     @if (item.Status != "Cancelled" && item.AppointmentDate > DateTime.Now)
                     {

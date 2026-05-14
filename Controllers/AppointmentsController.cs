@@ -24,9 +24,16 @@ namespace ClinicSystem_22180011.Controllers
             _userManager = userManager;
         }
 
-        public async Task<IActionResult> Index(string searchString)
+        public async Task<IActionResult> Index(string searchString, DateTime? searchDate, string sortOrder)
         {
             var userId = _userManager.GetUserId(User);
+
+            ViewData["DateSortParm"] = String.IsNullOrEmpty(sortOrder) ? "date_desc" : "";
+            ViewData["NameSortParm"] = sortOrder == "Doctor" ? "doctor_desc" : "Doctor";
+
+            ViewData["CurrentFilter"] = searchString;
+            ViewData["CurrentDate"] = searchDate?.ToString("yyyy-MM-dd");
+            ViewData["CurrentSort"] = sortOrder;
 
             var query = _context.Appointments
                 .Include(a => a.Doctor)
@@ -49,32 +56,32 @@ namespace ClinicSystem_22180011.Controllers
                                       || a.Patient.LastName.Contains(searchString));
             }
 
-            ViewData["CurrentFilter"] = searchString;
+            if (searchDate.HasValue)
+            {
+                query = query.Where(a => a.AppointmentDate.Date == searchDate.Value.Date);
+            }
 
-            var finalAppointments = await query
-                .OrderByDescending(a => a.AppointmentDate >= DateTime.Now)
-                .ThenBy(a => a.AppointmentDate)
-                .ToListAsync();
+            query = sortOrder switch
+            {
+                "date_desc" => query.OrderByDescending(a => a.AppointmentDate),
+                "Doctor" => query.OrderBy(a => a.Doctor.FullName),
+                "doctor_desc" => query.OrderByDescending(a => a.Doctor.FullName),
+                _ => query.OrderBy(a => a.AppointmentDate),
+            };
 
-            foreach (var app in finalAppointments)
+            var appointments = await query.ToListAsync();
+
+            foreach (var app in appointments)
             {
                 if (app.Status != "Cancelled")
                 {
-                    if (app.AppointmentDate < DateTime.Now)
-                    {
-                        app.Status = "Completed";
-                    }
-                    else
-                    {
-                        app.Status = "Upcoming";
-                    }
+                    app.Status = app.AppointmentDate < DateTime.Now ? "Completed" : "Upcoming";
                 }
             }
 
-            return View(finalAppointments);
+            return View(appointments);
         }
 
-        // ДЕТАЙЛИ: Работи с твоя AppointId
         public async Task<IActionResult> Details(int? id)
         {
             if (id == null) return NotFound();
@@ -82,11 +89,11 @@ namespace ClinicSystem_22180011.Controllers
             var appointment = await _context.Appointments
                 .Include(a => a.Doctor)
                 .Include(a => a.Patient)
+                .Include(a => a.ExamDetails)
                 .FirstOrDefaultAsync(m => m.AppointId == id);
 
             if (appointment == null) return NotFound();
 
-            // Сигурност: Само лекар/пациент на прегледа или Админ могат да виждат детайли
             var userId = _userManager.GetUserId(User);
             if (!User.IsInRole("Admin") && appointment.Doctor?.UserId != userId && appointment.Patient?.UserId != userId)
             {
@@ -252,7 +259,7 @@ namespace ClinicSystem_22180011.Controllers
 
 
         [Authorize(Roles = "Admin, Doctor")]
-        public async Task<IActionResult> ExportToCSV()
+        public async Task<IActionResult> ExportToCSV(string searchString, DateTime? searchDate, string sortOrder)
         {
             var userId = _userManager.GetUserId(User);
 
@@ -261,15 +268,38 @@ namespace ClinicSystem_22180011.Controllers
                 .Include(a => a.Patient)
                 .AsQueryable();
 
+            // 1. Ролева филтрация
             if (User.IsInRole("Doctor"))
             {
                 query = query.Where(a => a.Doctor.UserId == userId);
             }
 
+            // 2. Филтър по име (същия като в Index)
+            if (!string.IsNullOrEmpty(searchString))
+            {
+                query = query.Where(a => a.Doctor.FullName.Contains(searchString)
+                                      || a.Patient.FirstName.Contains(searchString)
+                                      || a.Patient.LastName.Contains(searchString));
+            }
+
+            // 3. Филтър по дата (същия като в Index)
+            if (searchDate.HasValue)
+            {
+                query = query.Where(a => a.AppointmentDate.Date == searchDate.Value.Date);
+            }
+
+            // 4. Сортиране
+            query = sortOrder switch
+            {
+                "date_desc" => query.OrderByDescending(a => a.AppointmentDate),
+                "Doctor" => query.OrderBy(a => a.Doctor.FullName),
+                "doctor_desc" => query.OrderByDescending(a => a.Doctor.FullName),
+                _ => query.OrderBy(a => a.AppointmentDate),
+            };
+
             var appointments = await query.ToListAsync();
 
             var builder = new System.Text.StringBuilder();
-      
             builder.AppendLine("Дата и час;Статус;Лекар;Пациент");
 
             foreach (var item in appointments)
@@ -278,30 +308,16 @@ namespace ClinicSystem_22180011.Controllers
                 string doctor = item.Doctor?.FullName ?? "Няма информация";
                 string patient = item.Patient != null ? $"{item.Patient.FirstName} {item.Patient.LastName}" : "Няма информация";
 
-                // Уеднаквена логика за превод в Excel
-                string statusBg = "";
-                if (item.Status == "Cancelled")
-                {
-                    statusBg = "Отказан";
-                }
-                else if (item.AppointmentDate < DateTime.Now)
-                {
-                    statusBg = "Приключил";
-                }
-                else
-                {
-                    statusBg = "Предстоящ";
-                }
+                // Уеднаквена логика за статус
+                string statusBg = item.Status == "Cancelled" ? "Отказан" :
+                                 (item.AppointmentDate < DateTime.Now ? "Приключил" : "Предстоящ");
 
                 builder.AppendLine($"{dateStr};{statusBg};{doctor};{patient}");
             }
 
-
             var bom = new byte[] { 0xEF, 0xBB, 0xBF };
             var content = System.Text.Encoding.UTF8.GetBytes(builder.ToString());
-            var finalFile = bom.Concat(content).ToArray();
-
-            return File(finalFile, "text/csv", "pregledi_export.csv");
+            return File(bom.Concat(content).ToArray(), "text/csv", "pregledi_filtered.csv");
         }
     }
 }
