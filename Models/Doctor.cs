@@ -15,8 +15,11 @@ public partial class Doctor
 
     public string? Specialty { get; set; }
 
+    public string? Biography { get; set; }
+
     public string? ScheduleGroup { get; set; }
 
 
+    public virtual ICollection<DoctorComment> DoctorComments { get; set; } = new List<DoctorComment>();
     public virtual ICollection<Appointment> Appointments { get; set; } = new List<Appointment>();
 }

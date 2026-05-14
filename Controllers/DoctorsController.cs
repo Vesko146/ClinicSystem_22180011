@@ -46,6 +46,7 @@ namespace ClinicSystem_22180011.Controllers
             }
 
             var doctor = await _context.Doctors
+                .Include(d => d.DoctorComments)
                 .FirstOrDefaultAsync(m => m.DoctorId == id);
             if (doctor == null)
             {
@@ -55,32 +56,39 @@ namespace ClinicSystem_22180011.Controllers
             return View(doctor);
         }
 
-        // GET: Doctors/Create
         [Authorize(Roles = "Admin")]
         public IActionResult Create()
         {
             return View();
         }
 
-        // POST: Doctors/Create
-
         [HttpPost]
         [ValidateAntiForgeryToken]
         [Authorize(Roles = "Admin")]
-        public async Task<IActionResult> Create(string FullName, string Email, string Password, string ScheduleGroup)
-        {       
-            var user = new User { UserName = Email, Email = Email, EmailConfirmed = true };          
+        public async Task<IActionResult> Create(string FullName, string Email, string Password, string ScheduleGroup, string Specialty, string Biography)
+        {
+            var user = new User { UserName = Email, Email = Email, EmailConfirmed = true };
             var result = await _userManager.CreateAsync(user, Password);
 
             if (result.Succeeded)
             {
                 await _userManager.AddToRoleAsync(user, "Doctor");
 
+                // ТУК Е МАГИЯТА: Превръщаме служебните кодове в текст за пациентите
+                string readableSchedule = ScheduleGroup switch
+                {
+                    "Alpha" => "Понеделник, Сряда и Петък сутрин.",
+                    "Beta" => "Вторник, Четвъртък и Петък следобед.",
+                    _ => ScheduleGroup 
+                };
+
                 var doctor = new Doctor
                 {
                     FullName = FullName,
                     UserId = user.Id,
-                    ScheduleGroup = ScheduleGroup
+                    ScheduleGroup = readableSchedule, 
+                    Specialty = Specialty,
+                    Biography = Biography
                 };
 
                 _context.Doctors.Add(doctor);
@@ -93,7 +101,7 @@ namespace ClinicSystem_22180011.Controllers
             {
                 ModelState.AddModelError(string.Empty, error.Description);
             }
-            return View();  
+            return View();
         }
 
         // GET: Doctors/Edit/5
@@ -114,11 +122,11 @@ namespace ClinicSystem_22180011.Controllers
         }
 
         // POST: Doctors/Edit/5
-        
+
         [HttpPost]
         [ValidateAntiForgeryToken]
         [Authorize(Roles = "Admin")]
-        public async Task<IActionResult> Edit(int id, [Bind("DoctorId,FullName,Specialty,ScheduleGroup,LastModified22180011")] Doctor doctor)
+        public async Task<IActionResult> Edit(int id, [Bind("DoctorId,FullName,Specialty,ScheduleGroup,Biography,LastModified22180011")] Doctor doctor) // Добавено Biography тук
         {
             if (id != doctor.DoctorId)
             {
@@ -198,6 +206,34 @@ namespace ClinicSystem_22180011.Controllers
             await _context.SaveChangesAsync();
             return RedirectToAction(nameof(Index));
         }
+
+
+        [HttpPost]
+        [Authorize(Roles = "Patient")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> AddComment(int doctorId, string content)
+        {
+            if (string.IsNullOrWhiteSpace(content))
+            {
+                return RedirectToAction("Details", new { id = doctorId });
+            }
+
+            var userName = User.Identity.Name ?? "Анонимен";
+
+            var comment = new DoctorComment
+            {
+                DoctorId = doctorId,
+                Content = content,
+                CreatedAt = DateTime.Now,
+                PatientName = userName
+            };
+
+            _context.DoctorComments.Add(comment);
+            await _context.SaveChangesAsync();
+
+            return RedirectToAction("Details", new { id = doctorId });
+        }
+
 
         private bool DoctorExists(int id)
         {

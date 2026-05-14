@@ -1,0 +1,61 @@
+﻿@model IEnumerable<ClinicSystem_22180011.Models.Appointment>
+
+<div class="container">
+    <h2 class="mb-4">📋 Електронно здравно досие</h2>
+
+    <form asp-action="MedicalHistory" method="get" class="mb-4">
+        <div class="row g-2 align-items-end">
+            <div class="col-md-4">
+                <label class="form-label small">Търсене по текст:</label>
+                <input type="text" name="filter" value="@ViewData["CurrentFilter"]" class="form-control" placeholder="Име на пациент, лекар, диагноза..." />
+            </div>
+            <div class="col-md-3">
+                <label class="form-label small">Дата на преглед:</label>
+                <input type="date" name="searchDate" value="@ViewData["CurrentDate"]" class="form-control" />
+            </div>
+            <div class="col-md-5">
+                <button type="submit" class="btn btn-primary">🔍 Търси</button>
+
+                <a asp-action="MedicalHistory" class="btn btn-outline-secondary">❌ Изчисти</a>
+            </div>
+        </div>
+    </form>
+
+    @if (!Model.Any())
+    {
+        <div class="alert alert-warning">Не са намерени записи за избраните критерии.</div>
+    }
+    else
+    {
+        <div class="row">
+            @foreach (var item in Model)
+            {
+                <div class="col-md-6 mb-3">
+                    <div class="card shadow-sm h-100 border-left-primary">
+                        <div class="card-body">
+                            <h5 class="card-title text-primary">📅 @item.AppointmentDate.ToString("dd.MM.yyyy HH:mm")</h5>
+                            <h6 class="card-subtitle mb-2 text-muted small">
+                                👨‍⚕️ Лекар: @item.Doctor?.FullName | 👤 Пациент: @item.Patient?.FirstName @item.Patient?.LastName
+                            </h6>
+                            <hr />
+                            @foreach (var detail in item.ExamDetails)
+                            {
+                                <div class="mb-2">
+                                    <span class="badge bg-light text-dark border">🩺 Диагноза</span>
+                                    <p class="mb-1 text-danger fw-bold">@detail.Diagnosis</p>
+                                </div>
+                                <div>
+                                    <span class="badge bg-light text-dark border">💊 Лекарства</span>
+                                    <p class="mb-1">@detail.Prescription</p>
+                                </div>
+                                <div class="mt-3 pt-2 border-top text-muted" style="font-size: 0.75rem;">
+                                    @(detail.LastModified22180011.HasValue? detail.LastModified22180011.Value.ToString("dd.MM.yyyy г. HH:mm") : "Няма данни")
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+</div>

@@ -258,6 +258,46 @@ namespace ClinicSystem_22180011.Controllers
         }
 
 
+        [Authorize(Roles = "Patient, Doctor, Admin")]
+        public async Task<IActionResult> MedicalHistory(string filter, DateTime? searchDate)
+        {
+            var userId = _userManager.GetUserId(User);
+
+            var query = _context.Appointments
+                .Include(a => a.Doctor)
+                .Include(a => a.Patient)
+                .Include(a => a.ExamDetails)
+                .Where(a => a.ExamDetails.Any())
+                .AsQueryable();
+
+            if (User.IsInRole("Patient"))
+            {
+                query = query.Where(a => a.Patient.UserId == userId);
+            }
+
+            if (!string.IsNullOrEmpty(filter))
+            {
+                filter = filter.ToLower(); 
+                query = query.Where(a =>
+                    a.ExamDetails.Any(ed => ed.Diagnosis.Contains(filter) || ed.Prescription.Contains(filter)) ||
+                    a.Patient.FirstName.Contains(filter) ||
+                    a.Patient.LastName.Contains(filter) ||
+                    a.Doctor.FullName.Contains(filter) 
+                );
+            }
+
+            if (searchDate.HasValue)
+            {
+                query = query.Where(a => a.AppointmentDate.Date == searchDate.Value.Date);
+            }
+
+            ViewData["CurrentFilter"] = filter;
+            ViewData["CurrentDate"] = searchDate?.ToString("yyyy-MM-dd");
+
+            return View(await query.OrderByDescending(a => a.AppointmentDate).ToListAsync());
+        }
+
+
         [Authorize(Roles = "Admin, Doctor")]
         public async Task<IActionResult> ExportToCSV(string searchString, DateTime? searchDate, string sortOrder)
         {

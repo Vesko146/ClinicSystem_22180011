@@ -26,6 +26,7 @@ namespace ClinicSystem_22180011.Models
         public virtual DbSet<Log22180011> Log22180011s { get; set; }
         public virtual DbSet<Patient> Patients { get; set; }
         public virtual DbSet<ViewDoctorSchedule> ViewDoctorSchedules { get; set; }
+        public virtual DbSet<DoctorComment> DoctorComments { get; set; }
 
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
@@ -35,7 +36,6 @@ namespace ClinicSystem_22180011.Models
 
         {
 
-            // ЗАДЪЛЖИТЕЛНО: Извикваме базовия метод, за да се заредят Identity таблиците
 
             base.OnModelCreating(modelBuilder);
 
@@ -158,6 +158,25 @@ namespace ClinicSystem_22180011.Models
                 entity.Property(e => e.DoctorName).HasMaxLength(100);
                 entity.Property(e => e.PatientName).HasMaxLength(101);
                 entity.Property(e => e.Status).HasMaxLength(50);
+            });
+
+            modelBuilder.Entity<DoctorComment>(entity =>
+            {
+                entity.HasKey(e => e.CommentId);
+                entity.ToTable("DoctorComments", "22180011");
+
+                entity.Property(e => e.CommentId).HasColumnName("CommentId");
+                entity.Property(e => e.Content).IsRequired();
+                entity.Property(e => e.PatientName).HasMaxLength(100).IsRequired();
+                entity.Property(e => e.CreatedAt)
+                    .HasColumnType("datetime")
+                    .HasDefaultValueSql("(getdate())");
+
+                entity.HasOne(d => d.Doctor)
+                    .WithMany(p => p.DoctorComments)
+                    .HasForeignKey(d => d.DoctorId)
+                    .OnDelete(DeleteBehavior.Cascade) 
+                    .HasConstraintName("FK_DoctorComments_Doctors");
             });
 
             OnModelCreatingPartial(modelBuilder);

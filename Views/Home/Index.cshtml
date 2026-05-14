@@ -2,7 +2,37 @@
     ViewData["Title"] = "Home Page";
 }
 
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
+<div class="text-center mb-5">
+    <h1 class="display-4 fw-bold text-primary">Добре дошли в ClinicSystem</h1>
+    <p class="lead">Интегрирана система за управление на медицински прегледи и досиета.</p>
+</div>
+
+<div class="row">
+    <div class="col-md-4 mb-4">
+        <div class="card shadow-sm border-left-primary h-100 p-3">
+            <div class="card-body">
+                <h5 class="card-title">👨‍⚕️ За лекари</h5>
+                <p class="card-text">Управлявайте своите прегледи, поставяйте диагнози и следете историята на пациентите си.</p>
+                <a asp-controller="Appointments" asp-action="Index" class="btn btn-primary w-100">Към прегледи</a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4 mb-4">
+        <div class="card shadow-sm border-left-primary h-100 p-3">
+            <div class="card-body">
+                <h5 class="card-title">👤 За пациенти</h5>
+                <p class="card-text">Запишете час при специалист и прегледайте своето електронно здравно досие по всяко време.</p>
+                <a asp-controller="Doctors" asp-action="Index" class="btn btn-outline-primary w-100">Търси лекар</a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4 mb-4">
+        <div class="card shadow-sm border-left-primary h-100 p-3">
+            <div class="card-body">
+                <h5 class="card-title">📋 Здравно досие</h5>
+                <p class="card-text">Всички диагнози и предписани лекарства на едно място с бърза търсачка.</p>
+                <a asp-controller="Appointments" asp-action="MedicalHistory" class="btn btn-success w-100 text-white">Виж досие</a>
+            </div>
+        </div>
+    </div>
 </div>

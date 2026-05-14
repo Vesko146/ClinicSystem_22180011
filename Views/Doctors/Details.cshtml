@@ -1,31 +1,76 @@
 ﻿@model ClinicSystem_22180011.Models.Doctor
 
-@{
-    ViewData["Title"] = "Details";
-}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-4">
+            <div class="card shadow-sm border-0 text-center p-4">
+                <div class="mb-3">
+                    <img src="https://ui-avatars.com/api/?name=@Model.FullName&background=0D6EFD&color=fff&size=128" class="rounded-circle shadow" />
+                </div>
+                <h3 class="fw-bold">@Model.FullName</h3>
+                <span class="badge bg-primary fs-6 mb-3">@Model.Specialty</span>
+                <p class="text-muted"><i class="fas fa-calendar-alt"></i> Работни дни: @Model.ScheduleGroup</p>
+                <a asp-controller="Appointments" asp-action="AvailableSlots" asp-route-doctorId="@Model.DoctorId" class="btn btn-success w-100">Запиши час</a>
+            </div>
+        </div>
 
-<h1>Details</h1>
+        <div class="col-md-8">
+            <div class="card shadow-sm border-0 p-4 mb-4">
+                <h4 class="border-bottom pb-2">🩺 Професионална информация</h4>
+                <p class="mt-3" style="white-space: pre-line;">
+                    @(string.IsNullOrEmpty(Model.Biography) ? "Все още няма добавена информация." : Model.Biography)
+                </p>
+            </div>
 
-<div>
-    <h4>Doctor</h4>
-    <hr />
-    <dl class="row">
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.FullName)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.FullName)
-        </dd>
-        
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.LastModified22180011)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.LastModified22180011)
-        </dd>
-    </dl>
+            <div class="card shadow-sm border-0 p-4">
+                <h4 class="border-bottom pb-2">💬 Отзиви от пациенти</h4>
+
+                <div class="mt-3">
+                    @if (Model.DoctorComments != null && Model.DoctorComments.Any())
+                    {
+                        foreach (var comment in Model.DoctorComments.OrderByDescending(c => c.CreatedAt))
+                        {
+                            <div class="alert alert-light border shadow-sm mb-2">
+                                <div class="d-flex justify-content-between">
+                                    <strong>👤 @comment.PatientName</strong>
+                                    <small class="text-muted">@comment.CreatedAt.ToString("dd.MM.yyyy HH:mm")</small>
+                                </div>
+                                <p class="mb-0 mt-1">@comment.Content</p>
+                            </div>
+                        }
+                    }
+                    else
+                    {
+                        <p class="text-muted italic">Все още няма отзиви за този лекар.</p>
+                    }
+                </div>
+
+                @if (User.IsInRole("Patient"))
+                {
+                    <form asp-action="AddComment" method="post" class="mt-4">
+                        <input type="hidden" name="doctorId" value="@Model.DoctorId" />
+
+                        <label class="form-label fw-bold">Остави коментар:</label>
+                        <textarea name="content" class="form-control mb-2" rows="3" required placeholder="Напишете вашето мнение..."></textarea>
+
+                        <button type="submit" class="btn btn-primary btn-sm shadow-sm">Изпрати отзив</button>
+                    </form>
+                }
+            </div>
+        </div>
+    </div>
 </div>
-<div>
-    <a asp-action="Edit" asp-route-id="@Model?.DoctorId">Edit</a> |
-    <a asp-action="Index">Back to List</a>
+<div class="container mb-5">
+    <hr />
+    <div class="d-flex gap-2">
+        @if (User.IsInRole("Admin"))
+        {
+            <a asp-action="Edit" asp-route-id="@Model?.DoctorId" class="btn btn-warning shadow-sm">
+                <i class="fas fa-edit"></i> Редактирай
+            </a>
+        }
+        <a asp-action="Index" class="btn btn-outline-secondary shadow-sm">
+            <i class="fas fa-undo"></i> Назад към списъка
+        </a>
+    </div>
 </div>
