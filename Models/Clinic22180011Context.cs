@@ -35,20 +35,11 @@ namespace ClinicSystem_22180011.Models
 
         {
 
+            // ЗАДЪЛЖИТЕЛНО: Извикваме базовия метод, за да се заредят Identity таблиците
 
             base.OnModelCreating(modelBuilder);
 
-            modelBuilder.Entity<ExamDetail>(entity =>
-
-            {
-
-                entity.ToTable("ExamDetails", "22180011"); 
-
-                entity.Property(e => e.LastModified22180011)
-
-                .HasColumnName("LastModified22180011"); 
-
-            });
+            
 
             modelBuilder.Entity<Appointment>(entity =>
 
@@ -72,7 +63,7 @@ namespace ClinicSystem_22180011.Models
 
                     .HasColumnType("datetime")
 
-                    .HasColumnName("LastModified22180011");
+                    .HasColumnName("LastModified_22180011");
 
                 entity.Property(e => e.PatientId).HasColumnName("PatientID");
 
@@ -112,14 +103,18 @@ namespace ClinicSystem_22180011.Models
             modelBuilder.Entity<ExamDetail>(entity =>
             {
                 entity.HasKey(e => e.DetailId).HasName("PK__ExamDeta__135C314D1BC0F75F");
+
+                // Схемата "22180011" е задължителна тук
                 entity.ToTable("ExamDetails", "22180011", tb => tb.HasTrigger("trg_LogExamDetails"));
 
                 entity.Property(e => e.DetailId).HasColumnName("DetailID");
                 entity.Property(e => e.AppointId).HasColumnName("AppointID");
+
+                // Името трябва да съвпада точно с това в SQL (без долна черта)
                 entity.Property(e => e.LastModified22180011)
-                    .HasDefaultValueSql("(getdate())")
+                    .HasColumnName("LastModified_22180011")
                     .HasColumnType("datetime")
-                    .HasColumnName("LastModified_22180011");
+                    .HasDefaultValueSql("(getdate())");
 
                 entity.HasOne(d => d.Appoint).WithMany(p => p.ExamDetails)
                     .HasForeignKey(d => d.AppointId)
