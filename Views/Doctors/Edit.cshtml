@@ -9,10 +9,14 @@
             <form asp-action="Edit">
                 <div asp-validation-summary="ModelOnly" class="text-danger"></div>
                 <input type="hidden" asp-for="DoctorId" />
-
+                <input type="hidden" asp-for="UserId" />
                 <input type="hidden" asp-for="LastModified22180011" />
 
                 <div class="row">
+                    <div class="form-group">
+                        <label class="control-label">Имейл адрес</label>
+                        <input name="NewEmail" value="@ViewBag.Email" class="form-control" type="email" />
+                    </div>
                     <div class="col-md-6 mb-3">
                         <label class="form-label fw-bold">Име на лекаря</label>
                         <input asp-for="FullName" class="form-control shadow-sm" />
@@ -29,8 +33,8 @@
                 <div class="mb-3">
                     <label class="form-label fw-bold">График / Работни дни</label>
                     <select asp-for="ScheduleGroup" class="form-select shadow-sm">
-                        <option value="Понеделник - Сряда">Понеделник, Сряда и Петък сутрин.</option>
-                        <option value="Четвъртък - Петък">Вторник, Четвъртък и Петък следобед.</option>
+                        <option value="Понеделник, Сряда и Петък сутрин">Понеделник, Сряда и Петък сутрин</option>
+                        <option value="Вторник, Четвъртък и Петък следобед">Вторник, Четвъртък и Петък следобед</option>
                     </select>
                     <span asp-validation-for="ScheduleGroup" class="text-danger"></span>
                 </div>
@@ -54,9 +58,6 @@
     </div>
 </div>
 
-<div>
-    <a asp-action="Index">Back to List</a>
-</div>
 
 @section Scripts {
     @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}

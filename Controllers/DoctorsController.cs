@@ -123,10 +123,11 @@ namespace ClinicSystem_22180011.Controllers
 
         // POST: Doctors/Edit/5
 
+        
+        [Authorize(Roles = "Admin")]
         [HttpPost]
         [ValidateAntiForgeryToken]
-        [Authorize(Roles = "Admin")]
-        public async Task<IActionResult> Edit(int id, [Bind("DoctorId,FullName,Specialty,ScheduleGroup,Biography,LastModified22180011")] Doctor doctor) // Добавено Biography тук
+        public async Task<IActionResult> Edit(int id, [Bind("DoctorID,FullName,ScheduleGroup,Specialty,Biography")] Doctor doctor, string NewEmail)
         {
             if (id != doctor.DoctorId)
             {
@@ -137,8 +138,45 @@ namespace ClinicSystem_22180011.Controllers
             {
                 try
                 {
-                    _context.Update(doctor);
+                    // 1. Зареждаме текущия доктор от базата, за да вземем истинския му UserId
+                    var dbDoctor = await _context.Doctors.FindAsync(id);
+                    if (dbDoctor == null)
+                    {
+                        return NotFound();
+                    }
+
+                    // 2. Обновяваме само полетата, идващи от формата
+                    dbDoctor.FullName = doctor.FullName;
+                    dbDoctor.ScheduleGroup = doctor.ScheduleGroup;
+                    dbDoctor.Specialty = doctor.Specialty;
+                    dbDoctor.Biography = doctor.Biography;
+                    dbDoctor.LastModified22180011 = DateTime.Now; // Опресняваме лог колоната
+
+                    // 3. Запазваме промените по доктора в базата данни
                     await _context.SaveChangesAsync();
+
+                    // 4. Сега dbDoctor.UserId е наличен и верен, обновяваме профила в AspNetUsers
+                    if (!string.IsNullOrEmpty(dbDoctor.UserId))
+                    {
+                        var user = await _userManager.FindByIdAsync(dbDoctor.UserId);
+                        if (user != null && !string.IsNullOrEmpty(NewEmail) && user.Email != NewEmail)
+                        {
+                            user.Email = NewEmail;
+                            user.UserName = NewEmail;
+                            user.NormalizedEmail = NewEmail.ToUpper();
+                            user.NormalizedUserName = NewEmail.ToUpper();
+
+                            var userResult = await _userManager.UpdateAsync(user);
+                            if (!userResult.Succeeded)
+                            {
+                                foreach (var error in userResult.Errors)
+                                {
+                                    ModelState.AddModelError(string.Empty, error.Description);
+                                }
+                                return View(doctor);
+                            }
+                        }
+                    }
                 }
                 catch (DbUpdateConcurrencyException)
                 {
@@ -155,6 +193,7 @@ namespace ClinicSystem_22180011.Controllers
             }
             return View(doctor);
         }
+
 
         [Authorize(Roles = "Doctor")]
         public async Task<IActionResult> MySchedule()

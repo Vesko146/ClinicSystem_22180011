@@ -106,8 +106,7 @@ namespace ClinicSystem_22180011.Controllers
         [Authorize(Roles = "Patient")]
         public async Task<IActionResult> SelectDoctor()
         {
-            ViewData["DoctorId"] = new SelectList(_context.Doctors, "DoctorId", "FullName");
-            return View();
+            return RedirectToAction("Index", "Doctors");
         }
 
         [Authorize(Roles = "Patient")]
@@ -119,17 +118,19 @@ namespace ClinicSystem_22180011.Controllers
             var dayOfWeek = selectedDate.DayOfWeek;
             var doctor = await _context.Doctors.FindAsync(doctorId);
 
+            if (doctor == null) return NotFound();
+
             int startHour = 0; int endHour = 0;
 
-            if (doctor.ScheduleGroup == "Alpha")
+            if (doctor.ScheduleGroup.Contains("Понеделник"))
             {
                 if (dayOfWeek == DayOfWeek.Monday || dayOfWeek == DayOfWeek.Wednesday) { startHour = 8; endHour = 17; }
-                else if (dayOfWeek == DayOfWeek.Friday) { startHour = 8; endHour = 12; }
+                else if (dayOfWeek == DayOfWeek.Friday) { startHour = 8; endHour = 12; } 
             }
-            else if (doctor.ScheduleGroup == "Beta")
+            else if (doctor.ScheduleGroup.Contains("Вторник"))
             {
                 if (dayOfWeek == DayOfWeek.Tuesday || dayOfWeek == DayOfWeek.Thursday) { startHour = 8; endHour = 17; }
-                else if (dayOfWeek == DayOfWeek.Friday) { startHour = 13; endHour = 17; }
+                else if (dayOfWeek == DayOfWeek.Friday) { startHour = 13; endHour = 17; } 
             }
 
             var allSlots = new List<DateTime>();
@@ -148,9 +149,11 @@ namespace ClinicSystem_22180011.Controllers
             }
 
             var takenSlots = await _context.Appointments
-                .Where(a => a.DoctorId == doctorId && a.AppointmentDate.Date == selectedDate.Date)
-                .Select(a => a.AppointmentDate)
-                .ToListAsync();
+            .Where(a => a.DoctorId == doctorId
+                && a.AppointmentDate.Date == selectedDate.Date
+                && a.Status != "Cancelled")
+            .Select(a => a.AppointmentDate)
+            .ToListAsync();
 
             ViewBag.DoctorId = doctorId;
             ViewBag.SelectedDate = selectedDate;
@@ -168,9 +171,11 @@ namespace ClinicSystem_22180011.Controllers
             var userId = _userManager.GetUserId(User);
             var patient = await _context.Patients.FirstOrDefaultAsync(p => p.UserId == userId);
 
-           
+
             var existingAppointment = await _context.Appointments
-                .AnyAsync(a => a.PatientId == patient.PatientId && a.AppointmentDate >= DateTime.Now);
+            .AnyAsync(a => a.PatientId == patient.PatientId
+                 && a.AppointmentDate >= DateTime.Now
+                 && a.Status != "Cancelled");
 
             if (existingAppointment)
             {

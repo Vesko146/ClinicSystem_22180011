@@ -25,7 +25,9 @@
 <p>
     @if (User.IsInRole("Patient"))
     {
-        <a asp-action="ChooseDoctor" asp-controller="Patients" class="btn btn-primary">Запиши нов час</a>
+        <a asp-controller="Doctors" asp-action="Index" class="btn btn-primary mb-3">
+            <i class="fas fa-plus"></i> Запиши нов час
+        </a>
     }
     @if (User.IsInRole("Admin") || User.IsInRole("Doctor"))
     {
