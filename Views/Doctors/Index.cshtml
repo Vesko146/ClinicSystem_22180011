@@ -1,60 +1,79 @@
 ﻿@model IEnumerable<ClinicSystem_22180011.Models.Doctor>
 
-@{
-    ViewData["Title"] = "Index";
-}
-
-<h1>Index</h1>
-
-<p>
-    @if (User.IsInRole("Admin"))
-    {
-        <a asp-action="Create" class="btn btn-primary">Добави нов лекар</a>
-    }
-</p>
-<form asp-action="Index" method="get">
-    <div class="form-actions no-color">
-        <p>
-            Намери по име: <input type="text" name="searchString" value="@ViewData["CurrentFilter"]" />
-            <input type="submit" value="Търси" class="btn btn-primary" /> |
-            <a asp-action="Index">Обратно към пълния списък</a>
-        </p>
+<div class="container mt-4">
+    <div class="row text-center mb-4">
+        <h2 class="fw-bold text-primary">Нашите Специалисти</h2>
+        <p class="text-muted">Изберете лекар за вашия преглед</p>
     </div>
-</form>
-<table class="table">
-    <thead>
-        <tr>
-            <th>
-                @Html.DisplayNameFor(model => model.FullName)
-            </th>
-            
-            <th>
-                @Html.DisplayNameFor(model => model.LastModified22180011)
-            </th>
-            <th></th>
-        </tr>
-    </thead>
-    <tbody>
+
+    <form asp-action="Index" method="get" class="mb-4">
+        <div class="input-group shadow-sm max-width-600 mx-auto" style="max-width: 500px;">
+            <input type="text" name="searchString" class="form-control border-end-0 p-3" placeholder="Търси лекар по име..." />
+            <button type="submit" class="btn btn-primary px-4">
+                Търси
+            </button>
+        </div>
+    </form>
+
+    <div class="row">
         @foreach (var item in Model)
         {
-            <tr>
-                <td>@Html.DisplayFor(modelItem => item.FullName)</td>
-                <td>@Html.DisplayFor(modelItem => item.LastModified22180011)</td>
-                <td>
-                    @if (User.IsInRole("Admin"))
-                    {
-                        <a asp-action="Edit" asp-route-id="@item.DoctorId" class="btn btn-sm btn-warning">Редактирай</a>
-                        <a asp-action="Delete" asp-route-id="@item.DoctorId" class="btn btn-sm btn-danger">Изтрий</a>
-                    }
+            <div class="col-md-4 mb-4">
+                <div class="card h-100 border-0 shadow-sm rounded-4 hover-card-effect">
+                    <div class="card-body p-4 text-center">
 
-                    <a asp-action="Details" asp-route-id="@item.DoctorId" class="btn btn-sm btn-info">Детайли</a>
+                        <div class="d-inline-block rounded-circle p-3 mb-3" style="background-color: #eef4ff; color: #0d6efd; width: 80px; height: 80px; display: inline-flex; align-items: center; justify-content: center;">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" fill="currentColor" class="bi bi-person-badge" viewBox="0 0 16 16">
+                                <path d="M6.5 2a.5.5 0 0 0 0 1h3a.5.5 0 0 0 0-1zM11 8a3 3 0 1 1-6 0 3 3 0 0 1 6 0z" />
+                                <path d="M4.5 0A2.5 2.5 0 0 0 2 2.5V14a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V2.5A2.5 2.5 0 0 0 11.5 0h-7zM3 2.5A1.5 1.5 0 0 1 4.5 1h7A1.5 1.5 0 0 1 13 2.5v10.795a4.2 4.2 0 0 0-.776-.492C11.392 12.387 10.063 12 8 12s-3.392.387-4.224.803a4.2 4.2 0 0 0-.776.492V2.5z" />
+                            </svg>
+                        </div>
 
-                    @if (User.IsInRole("Patient"))
-                    {
-                        <a asp-controller="Appointments" asp-action="AvailableSlots" asp-route-doctorId="@item.DoctorId" class="btn btn-sm btn-success">Запиши час</a>
-                    }
-                </td>
-            </tr>
+                        <h4 class="card-title fw-bold text-dark mb-1">@item.FullName</h4>
+                        <span class="badge bg-primary-subtle text-primary px-3 py-2 rounded-pill mb-3 border border-primary-subtle">
+                            @item.Specialty
+                        </span>
+                        <hr class="opacity-25">
+                        <p class="card-text text-muted small text-start mb-2">
+                            <strong>График:</strong> @item.ScheduleGroup
+                        </p>
+                        <p class="card-text text-muted small text-start text-truncate-3">
+                            <strong>Биография:</strong> @item.Biography
+                        </p>
+                    </div>
+
+                    <div class="card-footer bg-transparent border-0 p-4 pt-0">
+                        <div class="d-flex gap-2">
+                            <a asp-controller="Doctors" asp-action="Details" asp-route-id="@item.DoctorId" class="btn btn-outline-primary w-50 py-2 rounded-3 fw-bold">
+                                Детайли
+                            </a>
+
+                            <a asp-controller="Appointments" asp-action="AvailableSlots" asp-route-doctorId="@item.DoctorId" class="btn btn-primary w-50 py-2 rounded-3 fw-bold shadow-sm">
+                                Час
+                            </a>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
         }
-    </tbody>
-</table>
+    </div>
+</div>
+
+<style>
+    .hover-card-effect {
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+        .hover-card-effect:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 1rem 2rem rgba(0,0,0,0.1) !important;
+        }
+
+    .text-truncate-3 {
+        display: -webkit-box;
+        -webkit-line-clamp: 3;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+</style>

@@ -24,15 +24,17 @@ namespace ClinicSystem_22180011.Controllers
             _userManager = userManager;
         }
 
-        public async Task<IActionResult> Index(string searchString, DateTime? searchDate, string sortOrder)
+        public async Task<IActionResult> Index(string searchDoctor, string searchPatient, DateTime? fromDate, DateTime? toDate, string sortOrder)
         {
             var userId = _userManager.GetUserId(User);
 
             ViewData["DateSortParm"] = String.IsNullOrEmpty(sortOrder) ? "date_desc" : "";
             ViewData["NameSortParm"] = sortOrder == "Doctor" ? "doctor_desc" : "Doctor";
 
-            ViewData["CurrentFilter"] = searchString;
-            ViewData["CurrentDate"] = searchDate?.ToString("yyyy-MM-dd");
+            ViewData["CurrentDoctor"] = searchDoctor;
+            ViewData["CurrentPatient"] = searchPatient;
+            ViewData["CurrentFromDate"] = fromDate?.ToString("yyyy-MM-dd");
+            ViewData["CurrentToDate"] = toDate?.ToString("yyyy-MM-dd");
             ViewData["CurrentSort"] = sortOrder;
 
             var query = _context.Appointments
@@ -49,16 +51,25 @@ namespace ClinicSystem_22180011.Controllers
                 query = query.Where(a => a.Doctor.UserId == userId);
             }
 
-            if (!string.IsNullOrEmpty(searchString))
+            if (!string.IsNullOrEmpty(searchDoctor))
             {
-                query = query.Where(a => a.Doctor.FullName.Contains(searchString)
-                                      || a.Patient.FirstName.Contains(searchString)
-                                      || a.Patient.LastName.Contains(searchString));
+                query = query.Where(a => a.Doctor.FullName.Contains(searchDoctor));
             }
 
-            if (searchDate.HasValue)
+            if (!string.IsNullOrEmpty(searchPatient))
             {
-                query = query.Where(a => a.AppointmentDate.Date == searchDate.Value.Date);
+                query = query.Where(a => a.Patient.FirstName.Contains(searchPatient)
+                                      || a.Patient.LastName.Contains(searchPatient));
+            }
+
+            if (fromDate.HasValue)
+            {
+                query = query.Where(a => a.AppointmentDate.Date >= fromDate.Value.Date);
+            }
+
+            if (toDate.HasValue)
+            {
+                query = query.Where(a => a.AppointmentDate.Date <= toDate.Value.Date);
             }
 
             query = sortOrder switch
@@ -78,6 +89,8 @@ namespace ClinicSystem_22180011.Controllers
                     app.Status = app.AppointmentDate < DateTime.Now ? "Completed" : "Upcoming";
                 }
             }
+            
+            ViewBag.TotalCount = appointments.Count;
 
             return View(appointments);
         }
@@ -313,13 +326,11 @@ namespace ClinicSystem_22180011.Controllers
                 .Include(a => a.Patient)
                 .AsQueryable();
 
-            // 1. Ролева филтрация
             if (User.IsInRole("Doctor"))
             {
                 query = query.Where(a => a.Doctor.UserId == userId);
             }
 
-            // 2. Филтър по име (същия като в Index)
             if (!string.IsNullOrEmpty(searchString))
             {
                 query = query.Where(a => a.Doctor.FullName.Contains(searchString)
@@ -327,13 +338,11 @@ namespace ClinicSystem_22180011.Controllers
                                       || a.Patient.LastName.Contains(searchString));
             }
 
-            // 3. Филтър по дата (същия като в Index)
             if (searchDate.HasValue)
             {
                 query = query.Where(a => a.AppointmentDate.Date == searchDate.Value.Date);
             }
 
-            // 4. Сортиране
             query = sortOrder switch
             {
                 "date_desc" => query.OrderByDescending(a => a.AppointmentDate),
@@ -353,7 +362,6 @@ namespace ClinicSystem_22180011.Controllers
                 string doctor = item.Doctor?.FullName ?? "Няма информация";
                 string patient = item.Patient != null ? $"{item.Patient.FirstName} {item.Patient.LastName}" : "Няма информация";
 
-                // Уеднаквена логика за статус
                 string statusBg = item.Status == "Cancelled" ? "Отказан" :
                                  (item.AppointmentDate < DateTime.Now ? "Приключил" : "Предстоящ");
 

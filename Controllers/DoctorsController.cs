@@ -30,7 +30,8 @@ namespace ClinicSystem_22180011.Controllers
 
             if (!String.IsNullOrEmpty(searchString))
             {
-                doctors = doctors.Where(s => s.FullName.Contains(searchString));
+                doctors = doctors.Where(s => s.FullName.Contains(searchString)
+                                          || s.Specialty.Contains(searchString));
             }
 
             return View(await doctors.ToListAsync());

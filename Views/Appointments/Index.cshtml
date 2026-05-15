@@ -20,51 +20,85 @@
     </div>
 }
 
-<h1>Списък с прегледи</h1>
+<div class="d-flex justify-content-between align-items-center mb-4 mt-2">
+    <h1 class="h2 fw-bold text-dark mb-0">Списък с прегледи</h1>
+    <span class="badge bg-dark p-2.5 fs-6 rounded-3 shadow-sm">
+        Общо часове: <strong class="text-info">@ViewBag.TotalCount</strong>
+    </span>
+</div>
 
 <p>
     @if (User.IsInRole("Patient"))
     {
-        <a asp-controller="Doctors" asp-action="Index" class="btn btn-primary mb-3">
+        <a asp-controller="Doctors" asp-action="Index" class="btn btn-primary mb-2">
             <i class="fas fa-plus"></i> Запиши нов час
         </a>
     }
     @if (User.IsInRole("Admin") || User.IsInRole("Doctor"))
     {
         <a asp-action="ExportToCSV"
-           asp-route-searchString="@ViewData["CurrentFilter"]"
-           asp-route-searchDate="@ViewData["CurrentDate"]"
+           asp-route-searchDoctor="@ViewData["CurrentDoctor"]"
+           asp-route-searchPatient="@ViewData["CurrentPatient"]"
+           asp-route-fromDate="@ViewData["CurrentFromDate"]"
+           asp-route-toDate="@ViewData["CurrentToDate"]"
            asp-route-sortOrder="@ViewData["CurrentSort"]"
-           class="btn btn-outline-success">Експорт в Excel (CSV)</a>
+           class="btn btn-outline-success mb-2">Експорт в Excel (CSV)</a>
     }
 </p>
 
-<form asp-action="Index" method="get" class="mb-3">
-    <div class="input-group">
-        <input type="text" name="searchString" class="form-control"
-               placeholder="Търси по име на лекар или пациент..." value="@ViewData["CurrentFilter"]" />
-        <input type="date" name="searchDate" class="form-control" value="@ViewData["CurrentDate"]" />
-        <button type="submit" class="btn btn-primary">Търси</button>
-        <a asp-action="Index" class="btn btn-secondary">Изчисти</a>
-    </div>
-</form>
+<div class="card border-0 shadow-sm rounded-3 mb-4 bg-light">
+    <div class="card-body p-3">
+        <form asp-action="Index" method="get">
+            <div class="row g-2">
+                <div class="col-md-3">
+                    <label class="form-label small fw-bold text-muted mb-1">Лекар</label>
+                    <input type="text" name="searchDoctor" value="@ViewData["CurrentDoctor"]" class="form-control" placeholder="Име на лекар..." />
+                </div>
 
-<table class="table table-hover">
+                <div class="col-md-3">
+                    <label class="form-label small fw-bold text-muted mb-1">Пациент</label>
+                    <input type="text" name="searchPatient" value="@ViewData["CurrentPatient"]" class="form-control" placeholder="Име на пациент..." />
+                </div>
+
+                <div class="col-md-2">
+                    <label class="form-label small fw-bold text-muted mb-1">От дата</label>
+                    <input type="date" name="fromDate" value="@ViewData["CurrentFromDate"]" class="form-control" />
+                </div>
+
+                <div class="col-md-2">
+                    <label class="form-label small fw-bold text-muted mb-1">До дата</label>
+                    <input type="date" name="toDate" value="@ViewData["CurrentToDate"]" class="form-control" />
+                </div>
+
+                <div class="col-md-2 d-flex align-items-end gap-1">
+                    <button type="submit" class="btn btn-primary w-100 fw-bold">Търси</button>
+                    <a asp-action="Index" class="btn btn-secondary" title="Изчисти филтрите">X</a>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<table class="table table-hover align-middle">
     <thead>
         <tr>
             <th>
                 <a asp-action="Index"
                    asp-route-sortOrder="@ViewData["DateSortParm"]"
-                   asp-route-searchString="@ViewData["CurrentFilter"]"
-                   asp-route-searchDate="@ViewData["CurrentDate"]">Дата и час</a>
+                   asp-route-searchDoctor="@ViewData["CurrentDoctor"]"
+                   asp-route-searchPatient="@ViewData["CurrentPatient"]"
+                   asp-route-fromDate="@ViewData["CurrentFromDate"]"
+                   asp-route-toDate="@ViewData["CurrentToDate"]">Дата и час</a>
             </th>
             <th>Статус</th>
             <th>LastModified22180011</th>
             <th>
                 <a asp-action="Index"
                    asp-route-sortOrder="@ViewData["NameSortParm"]"
-                   asp-route-searchString="@ViewData["CurrentFilter"]"
-                   asp-route-searchDate="@ViewData["CurrentDate"]">Лекар</a>
+                   asp-route-searchDoctor="@ViewData["CurrentDoctor"]"
+                   asp-route-searchPatient="@ViewData["CurrentPatient"]"
+                   asp-route-fromDate="@ViewData["CurrentFromDate"]"
+                   asp-route-toDate="@ViewData["CurrentToDate"]">Лекар</a>
             </th>
             <th>Пациент</th>
             <th>Действия</th>
@@ -82,15 +116,21 @@
                 <td>
                     @if (item.Status == "Cancelled")
                     {
-                        <span class="badge bg-secondary">Отказан</span>
+                        <span class="badge bg-danger px-3 py-2 text-white rounded-pill shadow-sm">
+                            Отказан
+                        </span>
                     }
                     else if (item.AppointmentDate < DateTime.Now)
                     {
-                        <span class="badge bg-light text-dark border">Приключил</span>
+                        <span class="badge bg-success px-3 py-2 text-white rounded-pill shadow-sm">
+                            Приключил
+                        </span>
                     }
                     else
                     {
-                        <span class="badge bg-success">Предстоящ</span>
+                        <span class="badge bg-warning text-dark px-3 py-2 rounded-pill shadow-sm">
+                            Предстоящ
+                        </span>
                     }
                 </td>
                 <td>@item.LastModified22180011.ToString("dd.MM.yyyy HH:mm")</td>

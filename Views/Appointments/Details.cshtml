@@ -19,15 +19,21 @@
         <dd class="col-sm-9">
             @if (Model.Status == "Cancelled")
             {
-                <span class="text-danger">Отказан</span>
+                <span class="badge bg-danger px-3 py-2 text-white rounded-pill shadow-sm">
+                    <i class="fas fa-times-circle me-1"></i> Отказан
+                </span>
             }
             else if (Model.AppointmentDate < DateTime.Now)
             {
-                <span>Приключил</span>
+                <span class="badge bg-success px-3 py-2 text-white rounded-pill shadow-sm">
+                    <i class="fas fa-check-circle me-1"></i> Приключил
+                </span>
             }
             else
             {
-                <span class="text-success">Предстоящ</span>
+                <span class="badge bg-warning text-dark px-3 py-2 rounded-pill shadow-sm">
+                    <i class="fas fa-clock me-1"></i> Предстоящ
+                </span>
             }
         </dd>
 

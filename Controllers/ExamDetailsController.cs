@@ -30,18 +30,33 @@ namespace ClinicSystem_22180011.Controllers
             return View(model);
         }
 
-        // POST: ExamDetails/Create
+        
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(ExamDetail model)
         {
             if (ModelState.IsValid)
             {
-                model.LastModified22180011 = DateTime.Now;
-                _context.ExamDetails.Add(model);
-                await _context.SaveChangesAsync();
+                var existingDetail = await _context.ExamDetails
+                    .FirstOrDefaultAsync(ed => ed.AppointId == model.AppointId);
 
-                TempData["Success"] = "Диагнозата и рецептата са записани успешно!";
+                if (existingDetail != null)
+                {
+                    existingDetail.Diagnosis = model.Diagnosis;
+                    existingDetail.Prescription = model.Prescription;
+                    existingDetail.LastModified22180011 = DateTime.Now;
+
+                    _context.Entry(existingDetail).State = EntityState.Modified;
+                    TempData["Success"] = "Диагнозата и рецептата бяха редактирани успешно!";
+                }
+                else
+                {
+                    model.LastModified22180011 = DateTime.Now;
+                    _context.ExamDetails.Add(model);
+                    TempData["Success"] = "Диагнозата и рецептата са записани успешно!";
+                }
+
+                await _context.SaveChangesAsync();
                 return RedirectToAction("Index", "Appointments");
             }
             return View(model);
