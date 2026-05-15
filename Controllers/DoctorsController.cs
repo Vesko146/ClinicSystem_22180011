@@ -123,75 +123,41 @@ namespace ClinicSystem_22180011.Controllers
 
         // POST: Doctors/Edit/5
 
-        
-        [Authorize(Roles = "Admin")]
+
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("DoctorID,FullName,ScheduleGroup,Specialty,Biography")] Doctor doctor, string NewEmail)
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> Edit(int id, [Bind("DoctorId,FullName,ScheduleGroup,Specialty,Biography,UserId,LastModified22180011")] Doctor doctor)
         {
             if (id != doctor.DoctorId)
             {
                 return NotFound();
             }
 
-            if (ModelState.IsValid)
+            try
             {
-                try
+                var dbDoctor = await _context.Doctors.FindAsync(id);
+                if (dbDoctor == null)
                 {
-                    // 1. Зареждаме текущия доктор от базата, за да вземем истинския му UserId
-                    var dbDoctor = await _context.Doctors.FindAsync(id);
-                    if (dbDoctor == null)
-                    {
-                        return NotFound();
-                    }
-
-                    // 2. Обновяваме само полетата, идващи от формата
-                    dbDoctor.FullName = doctor.FullName;
-                    dbDoctor.ScheduleGroup = doctor.ScheduleGroup;
-                    dbDoctor.Specialty = doctor.Specialty;
-                    dbDoctor.Biography = doctor.Biography;
-                    dbDoctor.LastModified22180011 = DateTime.Now; // Опресняваме лог колоната
-
-                    // 3. Запазваме промените по доктора в базата данни
-                    await _context.SaveChangesAsync();
-
-                    // 4. Сега dbDoctor.UserId е наличен и верен, обновяваме профила в AspNetUsers
-                    if (!string.IsNullOrEmpty(dbDoctor.UserId))
-                    {
-                        var user = await _userManager.FindByIdAsync(dbDoctor.UserId);
-                        if (user != null && !string.IsNullOrEmpty(NewEmail) && user.Email != NewEmail)
-                        {
-                            user.Email = NewEmail;
-                            user.UserName = NewEmail;
-                            user.NormalizedEmail = NewEmail.ToUpper();
-                            user.NormalizedUserName = NewEmail.ToUpper();
-
-                            var userResult = await _userManager.UpdateAsync(user);
-                            if (!userResult.Succeeded)
-                            {
-                                foreach (var error in userResult.Errors)
-                                {
-                                    ModelState.AddModelError(string.Empty, error.Description);
-                                }
-                                return View(doctor);
-                            }
-                        }
-                    }
+                    return NotFound();
                 }
-                catch (DbUpdateConcurrencyException)
-                {
-                    if (!DoctorExists(doctor.DoctorId))
-                    {
-                        return NotFound();
-                    }
-                    else
-                    {
-                        throw;
-                    }
-                }
+
+                dbDoctor.FullName = doctor.FullName;
+                dbDoctor.ScheduleGroup = doctor.ScheduleGroup;
+                dbDoctor.Specialty = doctor.Specialty;
+                dbDoctor.Biography = doctor.Biography;
+                dbDoctor.LastModified22180011 = DateTime.Now;
+
+                _context.Entry(dbDoctor).State = EntityState.Modified;
+                await _context.SaveChangesAsync();
+
                 return RedirectToAction(nameof(Index));
             }
-            return View(doctor);
+            catch (DbUpdateConcurrencyException)
+            {
+                if (!DoctorExists(doctor.DoctorId)) return NotFound();
+                else throw;
+            }
         }
 
 
