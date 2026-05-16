@@ -81,17 +81,15 @@ namespace ClinicSystem_22180011.Controllers
             return View(patient);
         }
 
-        // GET: Patients/Create
         public IActionResult Create()
         {
             return View();
         }
 
-        // POST: Patients/Create
         
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("PatientId,FirstName,LastName,Phone,LastModified22180011")] Patient patient)
+        public async Task<IActionResult> Create([Bind("PatientId,FirstName,LastName,Phone,Email,LastModified22180011")] Patient patient)
         {
             if (ModelState.IsValid)
             {
@@ -121,7 +119,7 @@ namespace ClinicSystem_22180011.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("PatientId,FirstName,LastName,Phone,LastModified22180011")] Patient patient)
+        public async Task<IActionResult> Edit(int id, [Bind("PatientId,FirstName,LastName,Phone,Email,LastModified22180011")] Patient patient)
         {
             if (id != patient.PatientId)
             {

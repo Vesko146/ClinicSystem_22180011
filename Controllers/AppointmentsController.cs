@@ -64,12 +64,12 @@ namespace ClinicSystem_22180011.Controllers
 
             if (fromDate.HasValue)
             {
-                query = query.Where(a => a.AppointmentDate.Date >= fromDate.Value.Date);
+                query = query.Where(a => a.AppointmentDate >= fromDate.Value.Date);
             }
 
             if (toDate.HasValue)
             {
-                query = query.Where(a => a.AppointmentDate.Date <= toDate.Value.Date);
+                query = query.Where(a => a.AppointmentDate < toDate.Value.Date.AddDays(1));
             }
 
             query = sortOrder switch

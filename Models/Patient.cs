@@ -10,7 +10,7 @@ public partial class Patient
     public string FirstName { get; set; } = null!;
     public string LastName { get; set; } = null!;
     public string? Phone { get; set; }
-
+    public string Email { get; set; }
     public DateTime LastModified22180011 { get; set; }
     public string? UserId { get; set; } 
     public int? ChosenDoctorId { get; set; } 

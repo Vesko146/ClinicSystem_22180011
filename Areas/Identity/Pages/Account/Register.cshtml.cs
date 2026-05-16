@@ -116,17 +116,18 @@ namespace ClinicSystem_22180011.Areas.Identity.Pages.Account
                     // 2. Създаваме записа в таблица Patients
                     var patient = new Patient
                     {
-                        FirstName = Input.FirstName, // Вземаме истинското име
-                        LastName = Input.LastName,   // Вземаме истинската фамилия
-                        Phone = Input.Phone,         // Вземаме истинския телефон
-                        UserId = user.Id,            // Свързваме с акаунта
-                        
+                        FirstName = Input.FirstName, 
+                        LastName = Input.LastName,   
+                        Phone = Input.Phone,         
+                        UserId = user.Id,
+                        Email = Input.Email
+
                     };
 
                     _context.Patients.Add(patient);
                     await _context.SaveChangesAsync();
 
-                    // Генериране на токени и имейл (стандартно)
+                    // Генериране на токени и имейл 
                     var userId = await _userManager.GetUserIdAsync(user);
                     var code = await _userManager.GenerateEmailConfirmationTokenAsync(user);
                     code = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(code));
