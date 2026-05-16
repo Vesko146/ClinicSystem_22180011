@@ -1,28 +1,65 @@
 ﻿@page
 @model IndexModel
 @{
-    ViewData["Title"] = "Profile";
+    ViewData["Title"] = "Настройки на профила";
     ViewData["ActivePage"] = ManageNavPages.Index;
 }
 
-<h3>@ViewData["Title"]</h3>
 <partial name="_StatusMessage" for="StatusMessage" />
-<div class="row">
-    <div class="col-md-6">
-        <form id="profile-form" method="post">
-            <div asp-validation-summary="ModelOnly" class="text-danger" role="alert"></div>
-            <div class="form-floating mb-3">
-                <input asp-for="Username" class="form-control" placeholder="Please choose your username." disabled />
-                <label asp-for="Username" class="form-label"></label>
-            </div>
-            <div class="form-floating mb-3">
-                <input asp-for="Input.PhoneNumber" class="form-control" placeholder="Please enter your phone number."/>
-                <label asp-for="Input.PhoneNumber" class="form-label"></label>
-                <span asp-validation-for="Input.PhoneNumber" class="text-danger"></span>
-            </div>
-            <button id="update-profile-button" type="submit" class="w-100 btn btn-lg btn-primary">Save</button>
-        </form>
+
+<div class="card border-0 shadow-sm rounded-3 bg-white p-4">
+    <div class="border-bottom pb-3 mb-4">
+        <h3 class="fw-bold text-dark mb-1"><i class="bi bi-person-gear text-primary me-2"></i>Личен профил</h3>
+        <p class="text-muted small mb-0">Преглед на оригиналните данни и управление на сигурността.</p>
     </div>
+
+    <form id="profile-form" method="post">
+        <div asp-validation-summary="ModelOnly" class="text-danger mb-3" role="alert"></div>
+
+        <div class="row g-4">
+            <div class="col-md-6 border-end">
+                <h6 class="fw-bold text-secondary mb-3"><i class="bi bi-lock-fill me-1"></i>Оригинални данни (Прочетени)</h6>
+
+                <div class="mb-3">
+                    <label asp-for="Username" class="form-label small fw-bold text-muted mb-1">Потребителско име</label>
+                    <input asp-for="Username" class="form-control bg-light text-muted border-0 fw-semibold" disabled />
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label small fw-bold text-muted mb-1">Официален статус на профила</label>
+                    <input class="form-control bg-light text-success border-0 fw-bold" value="Активен / Потвърден медицински достъп" disabled />
+                </div>
+            </div>
+
+            <div class="col-md-6">
+                <h6 class="fw-bold text-primary mb-3"><i class="bi bi-pencil-square me-1"></i>Промяна и сигурност</h6>
+
+                <div class="mb-4">
+                    <label asp-for="Input.PhoneNumber" class="form-label small fw-bold text-dark mb-1">Телефонен номер за връзка</label>
+                    <div class="input-group">
+                        <span class="input-group-text bg-white border-primary-subtle text-muted"><i class="bi bi-telephone"></i></span>
+                        <input asp-for="Input.PhoneNumber" class="form-control border-primary-subtle" placeholder="Въведете нов телефон..." />
+                    </div>
+                    <span asp-validation-for="Input.PhoneNumber" class="text-danger small"></span>
+                </div>
+
+                <hr class="text-muted opacity-25 mb-4" />
+
+                <div class="mb-2">
+                    <label class="form-label small fw-bold text-danger mb-1">Парола за достъп</label>
+                    <a id="change-password" asp-page="./ChangePassword" class="btn btn-outline-danger w-100 fw-semibold py-2">
+                        <i class="bi bi-shield-lock-fill me-1"></i> Промяна на текущата парола
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="border-top pt-3 mt-4 text-end">
+            <button id="update-profile-button" type="submit" class="btn btn-primary px-5 fw-bold shadow-sm">
+                Запази промените
+            </button>
+        </div>
+    </form>
 </div>
 
 @section Scripts {

@@ -37,9 +37,15 @@
                         </div>
 
                         <div class="form-floating mb-3">
-                            <input asp-for="Input.Phone" class="form-control rounded-3" aria-required="true" placeholder="Телефон" />
-                            <label asp-for="Input.Phone">Телефон</label>
+                            <input asp-for="Input.Phone" class="form-control rounded-3" maxlength="10" aria-required="true" placeholder="Телефон" />
+                            <label asp-for="Input.Phone">Телефон (10 цифри)</label>
                             <span asp-validation-for="Input.Phone" class="text-danger small"></span>
+                        </div>
+
+                        <div class="form-floating mb-3">
+                            <input asp-for="Input.EGN" class="form-control rounded-3" maxlength="10" aria-required="true" placeholder="ЕГН" />
+                            <label asp-for="Input.EGN">ЕГН (10 цифри)</label>
+                            <span asp-validation-for="Input.EGN" class="text-danger small"></span>
                         </div>
 
                         <div class="form-floating mb-3">

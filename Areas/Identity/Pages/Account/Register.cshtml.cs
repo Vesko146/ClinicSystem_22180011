@@ -55,33 +55,40 @@ namespace ClinicSystem_22180011.Areas.Identity.Pages.Account
 
         public class InputModel
         {
-            [Required]
+            [Required(ErrorMessage = "Името е задължително.")]
             [Display(Name = "Име")]
             public string FirstName { get; set; }
 
-            [Required]
+            [Required(ErrorMessage = "Фамилията е задължителна.")]
             [Display(Name = "Фамилия")]
             public string LastName { get; set; }
 
-            [Required]
-            [Phone]
+            [Required(ErrorMessage = "Телефонният номер е задължителен.")]
+            [StringLength(10, MinimumLength = 10, ErrorMessage = "Телефонният номер трябва да бъде точно 10 цифри.")]
+            [RegularExpression(@"^0[0-9]{9}$", ErrorMessage = "Невалиден телефон. Трябва да започва с 0 и да има общо 10 цифри.")]
             [Display(Name = "Телефон")]
             public string Phone { get; set; }
 
-            [Required]
-            [EmailAddress]
+            [Required(ErrorMessage = "ЕГН-то е задължително.")]
+            [StringLength(10, MinimumLength = 10, ErrorMessage = "ЕГН трябва да бъде точно 10 символа.")]
+            [RegularExpression(@"^[0-9]{10}$", ErrorMessage = "Невалиден формат на ЕГН (само 10 цифри).")]
+            [Display(Name = "ЕГН")]
+            public string EGN { get; set; }
+
+            [Required(ErrorMessage = "Имейлът е задължителен.")]
+            [EmailAddress(ErrorMessage = "Невалиден имейл адрес.")]
             [Display(Name = "Email")]
             public string Email { get; set; }
 
-            [Required]
-            [StringLength(100, ErrorMessage = "The {0} must be at least {2} and at max {1} characters long.", MinimumLength = 6)]
+            [Required(ErrorMessage = "Паролата е задължителна.")]
+            [StringLength(100, ErrorMessage = "Паролата трябва да е между {2} и {1} символа.", MinimumLength = 6)]
             [DataType(DataType.Password)]
             [Display(Name = "Password")]
             public string Password { get; set; }
 
             [DataType(DataType.Password)]
             [Display(Name = "Confirm password")]
-            [Compare("Password", ErrorMessage = "The password and confirmation password do not match.")]
+            [Compare("Password", ErrorMessage = "Паролите не съвпадат.")]
             public string ConfirmPassword { get; set; }
         }
 
@@ -99,7 +106,7 @@ namespace ClinicSystem_22180011.Areas.Identity.Pages.Account
 
             if (ModelState.IsValid)
             {
-                var user = CreateUser(); // Тук се създава обекта от тип User
+                var user = CreateUser();
 
                 await _userStore.SetUserNameAsync(user, Input.Email, CancellationToken.None);
                 await _emailStore.SetEmailAsync(user, Input.Email, CancellationToken.None);
@@ -113,21 +120,21 @@ namespace ClinicSystem_22180011.Areas.Identity.Pages.Account
                     // 1. Присвояваме роля "Patient"
                     await _userManager.AddToRoleAsync(user, "Patient");
 
-                    // 2. Създаваме записа в таблица Patients
+                    // 2. Създаваме записа в таблица Patients (Включително новото ЕГН)
                     var patient = new Patient
                     {
-                        FirstName = Input.FirstName, 
-                        LastName = Input.LastName,   
-                        Phone = Input.Phone,         
+                        FirstName = Input.FirstName,
+                        LastName = Input.LastName,
+                        Phone = Input.Phone,
+                        EGN = Input.EGN, // Добавено тук за базата
                         UserId = user.Id,
-                        Email = Input.Email
-
+                        Email = Input.Email,
+                        LastModified22180011 = DateTime.Now
                     };
 
                     _context.Patients.Add(patient);
                     await _context.SaveChangesAsync();
 
-                    // Генериране на токени и имейл 
                     var userId = await _userManager.GetUserIdAsync(user);
                     var code = await _userManager.GenerateEmailConfirmationTokenAsync(user);
                     code = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(code));

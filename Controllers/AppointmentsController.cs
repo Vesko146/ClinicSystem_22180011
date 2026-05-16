@@ -88,8 +88,10 @@ namespace ClinicSystem_22180011.Controllers
                     app.Status = app.AppointmentDate < DateTime.Now ? "Completed" : "Upcoming";
                 }
             }
-            
-            ViewBag.TotalCount = appointments.Count;
+
+            ViewBag.UpcomingCount = appointments.Count(a => a.Status == "Upcoming" || (a.Status != "Cancelled" && a.AppointmentDate >= DateTime.Now));
+            ViewBag.CompletedCount = appointments.Count(a => a.Status == "Completed" || (a.Status != "Cancelled" && a.AppointmentDate < DateTime.Now));
+            ViewBag.CancelledCount = appointments.Count(a => a.Status == "Cancelled");
 
             return View(appointments);
         }

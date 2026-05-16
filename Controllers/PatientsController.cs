@@ -23,7 +23,7 @@ namespace ClinicSystem_22180011.Controllers
             _userManager = userManager;
         }
 
-        // GET: Patients
+
         [Authorize(Roles = "Admin,Doctor")]
         public async Task<IActionResult> Index(string searchString)
         {
@@ -37,7 +37,7 @@ namespace ClinicSystem_22180011.Controllers
 
                 query = query.Where(p => p.FirstName.ToLower().Contains(search)
                                       || p.LastName.ToLower().Contains(search)
-                                      || p.Phone.Contains(search)); 
+                                      || p.Phone.Contains(search));
             }
 
             ViewData["CurrentFilter"] = searchString;
@@ -53,8 +53,9 @@ namespace ClinicSystem_22180011.Controllers
                 if (doctor != null)
                 {
                     var myPatients = await query
-                        .Where(p => p.ChosenDoctorId == doctor.DoctorId)
+                        .Where(p => _context.Appointments.Any(a => a.PatientId == p.PatientId && a.DoctorId == doctor.DoctorId))
                         .ToListAsync();
+
                     return View(myPatients);
                 }
             }
@@ -62,7 +63,7 @@ namespace ClinicSystem_22180011.Controllers
             return View(new List<Patient>());
         }
 
-        // GET: Patients/Details/5
+
         public async Task<IActionResult> Details(int? id)
         {
             if (id == null)
