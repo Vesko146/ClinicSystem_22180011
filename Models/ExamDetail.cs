@@ -19,5 +19,8 @@ public partial class ExamDetail
     [Column("LastModified22180011")]
     public DateTime? LastModified22180011 { get; set; }
 
+    [Required(ErrorMessage = "Типът на прегледа е задължителен.")]
+    [Display(Name = "Тип преглед")]
+    public string PaymentType { get; set; } = "Платен"; 
     public virtual Appointment? Appoint { get; set; }
 }

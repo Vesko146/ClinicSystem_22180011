@@ -189,12 +189,15 @@ namespace ClinicSystem_22180011.Controllers
             return View(allSlots);
         }
 
+
         [HttpPost]
         [Authorize(Roles = "Patient")]
         public async Task<IActionResult> Book(int doctorId, DateTime slot, string fundingType, string visitType)
         {
             var userId = _userManager.GetUserId(User);
             var patient = await _context.Patients.FirstOrDefaultAsync(p => p.UserId == userId);
+
+            if (patient == null) return NotFound();
 
             var existingAppointment = await _context.Appointments
             .AnyAsync(a => a.PatientId == patient.PatientId
@@ -218,6 +221,23 @@ namespace ClinicSystem_22180011.Controllers
                 TempData["Error"] = "Моля, изчакайте 30 секунди преди следващата заявка.";
                 return RedirectToAction(nameof(Index));
             }
+
+            // === НАЧАЛО НА НОВАТА ЗАЩИТА (МАКСИМУМ 3 ОПИТА НА ДЕН) ===
+            DateTime todayStart = DateTime.Today; // 00:00:00 часа днес
+            DateTime todayEnd = DateTime.Today.AddDays(1); // 00:00:00 часа утре
+
+            // Броим колко записа е направил този пациент в рамките на днешния ден
+            int appointmentsCreatedToday = await _context.Appointments
+                .CountAsync(a => a.PatientId == patient.PatientId
+                             && a.LastModified22180011 >= todayStart
+                             && a.LastModified22180011 < todayEnd);
+
+            if (appointmentsCreatedToday >= 3)
+            {
+                TempData["Error"] = "Достигнахте дневния лимит от 3 записани часа! С цел сигурност, нови записвания са блокирани до утре.";
+                return RedirectToAction(nameof(Index));
+            }
+            // === КРАЙ НА ЗАЩИТА ===
 
             var newAppointment = new Appointment
             {

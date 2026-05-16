@@ -2,6 +2,9 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace ClinicSystem_22180011.Controllers
 {
@@ -24,19 +27,35 @@ namespace ClinicSystem_22180011.Controllers
 
             if (appointment == null) return NotFound();
 
+            if (!string.IsNullOrEmpty(appointment.Status) && appointment.Status.Contains("НЗОК"))
+            {
+                ViewBag.PaymentType = "НЗОК";
+            }
+            else
+            {
+                ViewBag.PaymentType = "Платен";
+            }
+
             ViewBag.AppointmentInfo = $"Пациент: {appointment.Patient.FirstName} {appointment.Patient.LastName}, Дата: {appointment.AppointmentDate}";
 
             var model = new ExamDetail { AppointId = appointId };
             return View(model);
         }
 
-        
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(ExamDetail model)
         {
             if (ModelState.IsValid)
             {
+                var appointment = await _context.Appointments.FindAsync(model.AppointId);
+
+                string currentPaymentType = "Платен";
+                if (appointment != null && !string.IsNullOrEmpty(appointment.Status) && appointment.Status.Contains("НЗОК"))
+                {
+                    currentPaymentType = "НЗОК";
+                }
+
                 var existingDetail = await _context.ExamDetails
                     .FirstOrDefaultAsync(ed => ed.AppointId == model.AppointId);
 
@@ -44,6 +63,7 @@ namespace ClinicSystem_22180011.Controllers
                 {
                     existingDetail.Diagnosis = model.Diagnosis;
                     existingDetail.Prescription = model.Prescription;
+                    existingDetail.PaymentType = currentPaymentType; 
                     existingDetail.LastModified22180011 = DateTime.Now;
 
                     _context.Entry(existingDetail).State = EntityState.Modified;
@@ -51,6 +71,7 @@ namespace ClinicSystem_22180011.Controllers
                 }
                 else
                 {
+                    model.PaymentType = currentPaymentType; 
                     model.LastModified22180011 = DateTime.Now;
                     _context.ExamDetails.Add(model);
                     TempData["Success"] = "Диагнозата и рецептата са записани успешно!";

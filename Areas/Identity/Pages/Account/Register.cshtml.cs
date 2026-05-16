@@ -106,6 +106,13 @@ namespace ClinicSystem_22180011.Areas.Identity.Pages.Account
 
             if (ModelState.IsValid)
             {
+                var egnExists = await _context.Patients.AnyAsync(p => p.EGN == Input.EGN);
+                if (egnExists)
+                {
+                    ModelState.AddModelError("Input.EGN", "Пациент с това ЕГН вече е регистриран в системата.");
+                    return Page();
+                }
+
                 var user = CreateUser();
 
                 await _userStore.SetUserNameAsync(user, Input.Email, CancellationToken.None);

@@ -6,12 +6,7 @@
 
 <h1>Пациенти</h1>
 
-<p>
-    @if (User.IsInRole("Admin"))
-    {
-        <a asp-action="Create" class="btn btn-primary">Добави нов пациент</a>
-    }
-</p>
+
 
 <form asp-action="Index" method="get" class="mb-3">
     <div class="input-group">

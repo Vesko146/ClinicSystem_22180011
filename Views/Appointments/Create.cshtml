@@ -21,12 +21,28 @@
                     <input asp-for="AppointmentDate" class="form-control" type="datetime-local" />
                 </div>
 
-                <div class="mb-3">
+                <div class="mb-4">
                     <label class="form-label fw-semibold text-dark">Финансиране (Тип на приема)</label>
-                    <select id="fundingType" name="fundingType" class="form-select border-primary-subtle">
-                        <option value="НЗОК">По Здравна каса (НЗОК)</option>
+                    <select id="fundingTypeSelect" name="PaymentType" class="form-select border-primary fw-semibold text-primary">
                         <option value="Платен">Платен прием (Частно)</option>
+                        <option value="НЗОК">По Здравна каса (НЗОК)</option>
                     </select>
+                </div>
+
+                <div class="d-flex justify-content-between align-items-center mb-4 p-3 rounded-4 shadow-sm bg-white border" id="statusCard">
+                    <div>
+                        <span class="text-muted small d-block fw-bold text-uppercase">Статус на финансиране</span>
+                        <h4 class="fw-bold m-0 text-dark" id="statusTitle">Частен прием</h4>
+                    </div>
+                    <div id="badgeContainer">
+                        <div class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle px-4 py-3 rounded-3 d-flex align-items-center gap-2">
+                            <i class="bi bi-cash-coin fs-4"></i>
+                            <div class="text-start">
+                                <strong class="d-block fs-6 lh-1">ПЛАТЕН ПРИЕМ</strong>
+                                <small class="text-muted" style="font-size: 0.7rem;">Заплаща се по ценоразпис</small>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
                 <div class="mb-3">
@@ -95,20 +111,45 @@
 @section Scripts {
     <script>
         document.addEventListener("DOMContentLoaded", function () {
-            // Взимаме броя на приключилите прегледи, които пращаме от контролера
+            var select = document.getElementById("fundingTypeSelect");
+            var statusTitle = document.getElementById("statusTitle");
+            var badgeContainer = document.getElementById("badgeContainer");
+
+            select.addEventListener("change", function() {
+                if (select.value === "НЗОК") {
+                    statusTitle.innerText = "Здравна каса";
+                    badgeContainer.innerHTML = `
+                        <div class="badge bg-success-subtle text-success border border-success-subtle px-4 py-3 rounded-3 d-flex align-items-center gap-2">
+                            <i class="bi bi-shield-plus fs-4"></i>
+                            <div class="text-start">
+                                <strong class="d-block fs-6 lh-1">НАПРАВЛЕНИЕ ПО НЗОК</strong>
+                                <small class="text-muted" style="font-size: 0.7rem;">Потребителска такса: 2.90 лв.</small>
+                            </div>
+                        </div>`;
+                } else {
+                    statusTitle.innerText = "Частен прием";
+                    badgeContainer.innerHTML = `
+                        <div class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle px-4 py-3 rounded-3 d-flex align-items-center gap-2">
+                            <i class="bi bi-cash-coin fs-4"></i>
+                            <div class="text-start">
+                                <strong class="d-block fs-6 lh-1">ПЛАТЕН ПРИЕМ</strong>
+                                <small class="text-muted" style="font-size: 0.7rem;">Заплаща се по ценоразпис</small>
+                            </div>
+                        </div>`;
+                }
+            });
+
             var pastAppointmentsCount = @(ViewBag.PastAppointmentsCount ?? 0);
             var visitTypeSelect = document.getElementById("visitType");
 
             if (visitTypeSelect) {
                 if (pastAppointmentsCount === 0) {
-                    // Ако пациентът няма нито един преглед досега -> даваме му САМО Първичен преглед
                     for (var i = visitTypeSelect.options.length - 1; i >= 0; i--) {
                         if (visitTypeSelect.options[i].value !== "Първичен преглед") {
                             visitTypeSelect.remove(i);
                         }
                     }
                 } else {
-                    // Ако вече има прегледи -> премахваме опцията за "Първичен преглед"
                     for (var i = 0; i < visitTypeSelect.options.length; i++) {
                         if (visitTypeSelect.options[i].value === "Първичен преглед") {
                             visitTypeSelect.remove(i);
