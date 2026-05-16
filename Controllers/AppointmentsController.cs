@@ -121,6 +121,7 @@ namespace ClinicSystem_22180011.Controllers
             return RedirectToAction("Index", "Doctors");
         }
 
+
         [Authorize(Roles = "Patient")]
         public async Task<IActionResult> AvailableSlots(int doctorId, DateTime? date)
         {
@@ -137,12 +138,12 @@ namespace ClinicSystem_22180011.Controllers
             if (doctor.ScheduleGroup.Contains("Понеделник"))
             {
                 if (dayOfWeek == DayOfWeek.Monday || dayOfWeek == DayOfWeek.Wednesday) { startHour = 8; endHour = 17; }
-                else if (dayOfWeek == DayOfWeek.Friday) { startHour = 8; endHour = 12; } 
+                else if (dayOfWeek == DayOfWeek.Friday) { startHour = 8; endHour = 12; }
             }
             else if (doctor.ScheduleGroup.Contains("Вторник"))
             {
                 if (dayOfWeek == DayOfWeek.Tuesday || dayOfWeek == DayOfWeek.Thursday) { startHour = 8; endHour = 17; }
-                else if (dayOfWeek == DayOfWeek.Friday) { startHour = 13; endHour = 17; } 
+                else if (dayOfWeek == DayOfWeek.Friday) { startHour = 13; endHour = 17; }
             }
 
             var allSlots = new List<DateTime>();
@@ -167,6 +168,16 @@ namespace ClinicSystem_22180011.Controllers
             .Select(a => a.AppointmentDate)
             .ToListAsync();
 
+            var userId = _userManager.GetUserId(User);
+            var patient = await _context.Patients.FirstOrDefaultAsync(p => p.UserId == userId);
+            int pastCount = 0;
+            if (patient != null)
+            {
+                pastCount = await _context.Appointments
+                    .CountAsync(a => a.PatientId == patient.PatientId && a.AppointmentDate < DateTime.Now && a.Status != "Cancelled");
+            }
+            ViewBag.PastAppointmentsCount = pastCount;
+
             ViewBag.DoctorId = doctorId;
             ViewBag.SelectedDate = selectedDate;
             ViewBag.TakenSlots = takenSlots;
@@ -178,11 +189,10 @@ namespace ClinicSystem_22180011.Controllers
 
         [HttpPost]
         [Authorize(Roles = "Patient")]
-        public async Task<IActionResult> Book(int doctorId, DateTime slot)
+        public async Task<IActionResult> Book(int doctorId, DateTime slot, string fundingType, string visitType)
         {
             var userId = _userManager.GetUserId(User);
             var patient = await _context.Patients.FirstOrDefaultAsync(p => p.UserId == userId);
-
 
             var existingAppointment = await _context.Appointments
             .AnyAsync(a => a.PatientId == patient.PatientId
@@ -192,7 +202,7 @@ namespace ClinicSystem_22180011.Controllers
             if (existingAppointment)
             {
                 TempData["Error"] = "Вече имате записан час! Трябва първо да го откажете от списъка, ако искате да изберете нов лекар или време.";
-                return RedirectToAction(nameof(Index)); 
+                return RedirectToAction(nameof(Index));
             }
 
             var lastAppoint = await _context.Appointments
@@ -201,7 +211,7 @@ namespace ClinicSystem_22180011.Controllers
                 .FirstOrDefaultAsync();
 
             if (lastAppoint != null &&
-    DateTime.Now.Subtract(lastAppoint.LastModified22180011).TotalSeconds < 30)
+        DateTime.Now.Subtract(lastAppoint.LastModified22180011).TotalSeconds < 30)
             {
                 TempData["Error"] = "Моля, изчакайте 30 секунди преди следващата заявка.";
                 return RedirectToAction(nameof(Index));
@@ -212,7 +222,7 @@ namespace ClinicSystem_22180011.Controllers
                 DoctorId = doctorId,
                 PatientId = patient.PatientId,
                 AppointmentDate = slot,
-                Status = "Confirmed",
+                Status = $"{visitType} ({fundingType})",
                 LastModified22180011 = DateTime.Now
             };
 
@@ -220,7 +230,7 @@ namespace ClinicSystem_22180011.Controllers
             await _context.SaveChangesAsync();
 
             TempData["Success"] = "Часът е записан успешно!";
-            return RedirectToAction(nameof(Index)); 
+            return RedirectToAction(nameof(Index));
         }
 
 

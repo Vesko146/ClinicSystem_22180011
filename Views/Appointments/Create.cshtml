@@ -1,46 +1,125 @@
 ﻿@model ClinicSystem_22180011.Models.Appointment
 
 @{
-    ViewData["Title"] = "Create";
+    ViewData["Title"] = "Записване на час";
 }
 
-<h1>Create</h1>
+<h1 class="h2 fw-bold text-dark mb-4">Записване на нов час за преглед</h1>
 
-<h4>Appointment</h4>
-<hr />
 <div class="row">
-    <div class="col-md-4">
-        <form asp-action="Create">
-            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-            <div class="form-group">
-                <label asp-for="PatientId" class="control-label"></label>
-                <select asp-for="PatientId" class ="form-control" asp-items="ViewBag.PatientId"></select>
+    <div class="col-md-7">
+        <div class="card border-0 shadow-sm rounded-3 p-4 bg-white">
+            <form asp-action="Create" method="post">
+                <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+                <div class="mb-3">
+                    <label asp-for="DoctorId" class="form-label fw-semibold text-muted">Лекар</label>
+                    <select asp-for="DoctorId" class="form-select" asp-items="ViewBag.DoctorID"></select>
+                </div>
+                <div class="mb-3">
+                    <label asp-for="AppointmentDate" class="form-label fw-semibold text-muted">Дата и час</label>
+                    <input asp-for="AppointmentDate" class="form-control" type="datetime-local" />
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label fw-semibold text-dark">Финансиране (Тип на приема)</label>
+                    <select id="fundingType" name="fundingType" class="form-select border-primary-subtle">
+                        <option value="НЗОК">По Здравна каса (НЗОК)</option>
+                        <option value="Платен">Платен прием (Частно)</option>
+                    </select>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label fw-semibold text-dark">Вид на прегледа</label>
+                    <select id="visitType" name="visitType" class="form-select border-primary-subtle">
+                        <option value="Първичен преглед">Първичен преглед (30 мин.)</option>
+                        <option value="Вторичен преглед">Вторичен преглед (15 мин.)</option>
+                        <option value="Медицинска манипулация">Медицинска манипулация (20 мин.)</option>
+                    </select>
+                </div>
+
+                <div class="mt-4">
+                    <button type="submit" class="btn btn-primary px-4 fw-bold">Запази часа</button>
+                    <a asp-action="Index" class="btn btn-outline-secondary px-4 ms-2">Отказ</a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="col-md-5">
+        <div class="card border-0 shadow-sm rounded-3 bg-white border-top border-4 border-success">
+            <div class="card-body p-4">
+                <h4 class="fw-bold text-dark mb-3">
+                    <i class="bi bi-cash-coin text-success me-2"></i>Ценоразпис
+                </h4>
+                <p class="text-muted small">Важи за "Платен прием" (пациенти без направление от личен лекар):</p>
+
+                <table class="table table-sm table-hover align-middle mt-2">
+                    <thead class="table-light">
+                        <tr>
+                            <th class="py-2">Услуга / Преглед</th>
+                            <th class="text-end py-2">Цена</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td class="py-2 text-secondary fw-medium">Първичен преглед</td>
+                            <td class="text-end py-2 fw-bold text-success">60.00 лв.</td>
+                        </tr>
+                        <tr>
+                            <td class="py-2 text-secondary fw-medium">Вторичен преглед</td>
+                            <td class="text-end py-2 fw-bold text-success">35.00 лв.</td>
+                        </tr>
+                        <tr>
+                            <td class="py-2 text-secondary fw-medium">Медицинска манипулация</td>
+                            <td class="text-end py-2 fw-bold text-success">45.00 лв.</td>
+                        </tr>
+                        <tr>
+                            <td class="py-2 text-secondary fw-medium">Консултация по документи</td>
+                            <td class="text-end py-2 fw-bold text-success">30.00 лв.</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <div class="alert alert-info d-flex align-items-center mt-3 mb-0 rounded-3 p-2 small" role="alert">
+                    <i class="bi bi-info-circle-fill me-2 text-info fs-5"></i>
+                    <div>
+                        При прегледи по <strong>НЗОК</strong> се заплаща само законово установената потребителска такса от <strong>2.90 лв.</strong>
+                    </div>
+                </div>
             </div>
-            <div class="form-group">
-                <label asp-for="DoctorId" class="control-label"></label>
-                <select asp-for="DoctorId" class ="form-control" asp-items="ViewBag.DoctorId"></select>
-            </div>
-            <div class="form-group">
-                <label asp-for="AppointmentDate" class="control-label"></label>
-                <input asp-for="AppointmentDate" class="form-control" />
-                <span asp-validation-for="AppointmentDate" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="Status" class="control-label"></label>
-                <input asp-for="Status" class="form-control" />
-                <span asp-validation-for="Status" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <input type="submit" value="Create" class="btn btn-primary" />
-            </div>
-        </form>
+        </div>
     </div>
 </div>
 
-<div>
-    <a asp-action="Index">Back to List</a>
-</div>
-
 @section Scripts {
-    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            // Взимаме броя на приключилите прегледи, които пращаме от контролера
+            var pastAppointmentsCount = @(ViewBag.PastAppointmentsCount ?? 0);
+            var visitTypeSelect = document.getElementById("visitType");
+
+            if (visitTypeSelect) {
+                if (pastAppointmentsCount === 0) {
+                    // Ако пациентът няма нито един преглед досега -> даваме му САМО Първичен преглед
+                    for (var i = visitTypeSelect.options.length - 1; i >= 0; i--) {
+                        if (visitTypeSelect.options[i].value !== "Първичен преглед") {
+                            visitTypeSelect.remove(i);
+                        }
+                    }
+                } else {
+                    // Ако вече има прегледи -> премахваме опцията за "Първичен преглед"
+                    for (var i = 0; i < visitTypeSelect.options.length; i++) {
+                        if (visitTypeSelect.options[i].value === "Първичен преглед") {
+                            visitTypeSelect.remove(i);
+                            break;
+                        }
+                    }
+                }
+            }
+        });
+    </script>
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
 }
