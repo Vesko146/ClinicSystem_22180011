@@ -58,8 +58,7 @@ namespace ClinicSystem_22180011.Controllers
 
             if (!string.IsNullOrEmpty(searchPatient))
             {
-                query = query.Where(a => a.Patient.FirstName.Contains(searchPatient)
-                                      || a.Patient.LastName.Contains(searchPatient));
+                query = query.Where(a => (a.Patient.FirstName + " " + a.Patient.LastName).Contains(searchPatient));
             }
 
             if (fromDate.HasValue)
