@@ -348,7 +348,7 @@ namespace ClinicSystem_22180011.Controllers
 
 
         [Authorize(Roles = "Admin, Doctor")]
-        public async Task<IActionResult> ExportToCSV(string searchString, DateTime? searchDate, string sortOrder)
+        public async Task<IActionResult> ExportToCSV(string searchDoctor, string searchPatient, DateTime? fromDate, DateTime? toDate, string sortOrder)
         {
             var userId = _userManager.GetUserId(User);
 
@@ -362,16 +362,24 @@ namespace ClinicSystem_22180011.Controllers
                 query = query.Where(a => a.Doctor.UserId == userId);
             }
 
-            if (!string.IsNullOrEmpty(searchString))
+            if (!string.IsNullOrEmpty(searchDoctor))
             {
-                query = query.Where(a => a.Doctor.FullName.Contains(searchString)
-                                      || a.Patient.FirstName.Contains(searchString)
-                                      || a.Patient.LastName.Contains(searchString));
+                query = query.Where(a => a.Doctor.FullName.Contains(searchDoctor));
             }
 
-            if (searchDate.HasValue)
+            if (!string.IsNullOrEmpty(searchPatient))
             {
-                query = query.Where(a => a.AppointmentDate.Date == searchDate.Value.Date);
+                query = query.Where(a => (a.Patient.FirstName + " " + a.Patient.LastName).Contains(searchPatient));
+            }
+
+            if (fromDate.HasValue)
+            {
+                query = query.Where(a => a.AppointmentDate >= fromDate.Value.Date);
+            }
+
+            if (toDate.HasValue)
+            {
+                query = query.Where(a => a.AppointmentDate < toDate.Value.Date.AddDays(1));
             }
 
             query = sortOrder switch
