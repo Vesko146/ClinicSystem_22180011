@@ -82,5 +82,69 @@ namespace ClinicSystem_22180011.Controllers
             }
             return View(model);
         }
+
+        [Authorize(Roles = "Doctor")]
+        public async Task<IActionResult> Edit(int? id)
+        {
+            if (id == null) return NotFound();
+
+            var examDetail = await _context.ExamDetails
+                .Include(e => e.Appoint)
+                .ThenInclude(a => a.Patient)
+                .FirstOrDefaultAsync(m => m.DetailId == id);
+
+            if (examDetail == null) return NotFound();
+
+            // Предаваме информация за пациента на екрана, за да знае лекарят кого редактира
+            ViewBag.AppointmentInfo = $"Пациент: {examDetail.Appoint?.Patient?.FirstName} {examDetail.Appoint?.Patient?.LastName}, Дата: {examDetail.Appoint?.AppointmentDate}";
+            ViewBag.PaymentType = examDetail.PaymentType;
+
+            return View(examDetail);
+        }
+
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        [Authorize(Roles = "Doctor")]
+        public async Task<IActionResult> Edit(int detailId, [Bind("DetailId,AppointId,Diagnosis,Prescription,PaymentType,LastModified22180011")] ExamDetail model)
+        {
+            // Проверяваме дали DetailId от URL-а съвпада с това в изпратения модел
+            if (detailId != model.DetailId) return NotFound();
+
+            if (ModelState.IsValid)
+            {
+                try
+                {
+                    var existingDetail = await _context.ExamDetails.FindAsync(detailId);
+                    if (existingDetail == null) return NotFound();
+
+                    // Обновяваме само медицинските данни
+                    existingDetail.Diagnosis = model.Diagnosis;
+                    existingDetail.Prescription = model.Prescription;
+
+                    // Задължително обновяваме времето на последна модификация
+                    existingDetail.LastModified22180011 = DateTime.Now;
+
+                    _context.Entry(existingDetail).State = EntityState.Modified;
+                    await _context.SaveChangesAsync();
+
+                    TempData["Success"] = "Медицинският картон беше редактиран успешно!";
+                    return RedirectToAction("Index", "Appointments");
+                }
+                catch (DbUpdateConcurrencyException)
+                {
+                    if (!_context.ExamDetails.Any(e => e.DetailId == detailId))
+                    {
+                        return NotFound();
+                    }
+                    else
+                    {
+                        ModelState.AddModelError("", "Възникна многопотребителски конфликт. Данните вече бяха променени от друг източник.");
+                        return View(model);
+                    }
+                }
+            }
+            return View(model);
+        }
     }
 }

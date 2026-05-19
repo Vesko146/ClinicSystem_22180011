@@ -165,9 +165,20 @@
 
                     @if (User.IsInRole("Doctor") && item.AppointmentDate < DateTime.Now && item.Status != "Cancelled")
                     {
-                        <span> | </span>
-                        <a asp-controller="ExamDetails" asp-action="Create" asp-route-appointId="@item.AppointId"
-                           class="btn btn-sm btn-success">Добави медицински данни</a>
+                        var currentDetail = item.ExamDetails?.FirstOrDefault();
+
+                        if (currentDetail != null)
+                        {
+                            <a asp-controller="ExamDetails" asp-action="Edit" asp-route-id="@currentDetail.DetailId" class="btn btn-sm btn-outline-warning mb-1">
+                                <i class="bi bi-pencil-square"></i> Редактирай данни
+                            </a>
+                        }
+                        else
+                        {
+                            <a asp-controller="ExamDetails" asp-action="Create" asp-route-appointId="@item.AppointId" class="btn btn-sm btn-outline-primary mb-1">
+                                <i class="bi bi-plus-circle"></i> Добави медицински данни
+                            </a>
+                        }
                     }
 
                     @if (item.Status != "Cancelled" && item.AppointmentDate > DateTime.Now)

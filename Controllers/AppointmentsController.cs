@@ -40,6 +40,7 @@ namespace ClinicSystem_22180011.Controllers
             var query = _context.Appointments
                 .Include(a => a.Doctor)
                 .Include(a => a.Patient)
+                .Include(a => a.ExamDetails)
                 .AsQueryable();
 
             if (User.IsInRole("Patient"))
