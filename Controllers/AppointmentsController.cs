@@ -324,6 +324,10 @@ namespace ClinicSystem_22180011.Controllers
             {
                 query = query.Where(a => a.Patient.UserId == userId);
             }
+            else if (User.IsInRole("Doctor"))
+            {
+                query = query.Where(a => a.Doctor.UserId == userId);
+            }
 
             if (!string.IsNullOrEmpty(filter))
             {

@@ -28,6 +28,9 @@ namespace ClinicSystem_22180011.Areas.Identity.Pages.Account.Manage
 
         public string Username { get; set; }
 
+        [Display(Name = "Текущ телефонен номер")]
+        public string Phone { get; set; }
+
         [TempData]
         public string StatusMessage { get; set; }
 
@@ -45,13 +48,23 @@ namespace ClinicSystem_22180011.Areas.Identity.Pages.Account.Manage
         private async Task LoadAsync(User user)
         {
             var userName = await _userManager.GetUserNameAsync(user);
-            var phoneNumber = await _userManager.GetPhoneNumberAsync(user);
 
             Username = userName;
 
+            var patient = await _context.Patients.FirstOrDefaultAsync(p => p.UserId == user.Id);
+
+            if (patient != null)
+            {
+                Phone = patient.Phone;
+            }
+            else
+            {
+                Phone = "Няма въведен телефон";
+            }
+
             Input = new InputModel
             {
-                PhoneNumber = phoneNumber
+                // PhoneNumber = patient?.Phone
             };
         }
 

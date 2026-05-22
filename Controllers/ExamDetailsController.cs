@@ -1,9 +1,11 @@
 ﻿using ClinicSystem_22180011.Models;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Linq;
+using System.Security.Claims;
 using System.Threading.Tasks;
 
 namespace ClinicSystem_22180011.Controllers
@@ -12,10 +14,12 @@ namespace ClinicSystem_22180011.Controllers
     public class ExamDetailsController : Controller
     {
         private readonly Clinic22180011Context _context;
+        private readonly UserManager<User> _userManager;
 
-        public ExamDetailsController(Clinic22180011Context context)
+        public ExamDetailsController(Clinic22180011Context context, UserManager<User> userManager)
         {
             _context = context;
+            _userManager = userManager;
         }
 
         // GET: ExamDetails/Create?appointId=5
@@ -23,9 +27,19 @@ namespace ClinicSystem_22180011.Controllers
         {
             var appointment = _context.Appointments
                 .Include(a => a.Patient)
+                .Include(a => a.Doctor)
                 .FirstOrDefault(a => a.AppointId == appointId);
 
             if (appointment == null) return NotFound();
+
+            if (User.IsInRole("Doctor"))
+            {
+                var currentUserId = _userManager.GetUserId(User);
+                if (appointment.Doctor?.UserId != currentUserId)
+                {
+                    return Forbid(); 
+                }
+            }
 
             if (!string.IsNullOrEmpty(appointment.Status) && appointment.Status.Contains("НЗОК"))
             {
@@ -48,7 +62,20 @@ namespace ClinicSystem_22180011.Controllers
         {
             if (ModelState.IsValid)
             {
-                var appointment = await _context.Appointments.FindAsync(model.AppointId);
+                var appointment = await _context.Appointments
+                    .Include(a => a.Doctor) 
+                    .FirstOrDefaultAsync(a => a.AppointId == model.AppointId);
+
+                if (appointment == null) return NotFound();
+
+                if (User.IsInRole("Doctor"))
+                {
+                    var currentUserId = _userManager.GetUserId(User);
+                    if (appointment.Doctor?.UserId != currentUserId)
+                    {
+                        return Forbid();
+                    }
+                }
 
                 string currentPaymentType = "Платен";
                 if (appointment != null && !string.IsNullOrEmpty(appointment.Status) && appointment.Status.Contains("НЗОК"))
@@ -91,9 +118,17 @@ namespace ClinicSystem_22180011.Controllers
             var examDetail = await _context.ExamDetails
                 .Include(e => e.Appoint)
                 .ThenInclude(a => a.Patient)
+                .Include(e => e.Appoint)
+                    .ThenInclude(a => a.Doctor)
                 .FirstOrDefaultAsync(m => m.DetailId == id);
 
             if (examDetail == null) return NotFound();
+
+            var currentUserId = _userManager.GetUserId(User);
+            if (examDetail.Appoint?.Doctor?.UserId != currentUserId)
+            {
+                return Forbid();
+            }
 
             // Предаваме информация за пациента на екрана, за да знае лекарят кого редактира
             ViewBag.AppointmentInfo = $"Пациент: {examDetail.Appoint?.Patient?.FirstName} {examDetail.Appoint?.Patient?.LastName}, Дата: {examDetail.Appoint?.AppointmentDate}";
@@ -115,8 +150,18 @@ namespace ClinicSystem_22180011.Controllers
             {
                 try
                 {
-                    var existingDetail = await _context.ExamDetails.FindAsync(detailId);
+                    var existingDetail = await _context.ExamDetails
+                        .Include(ed => ed.Appoint)
+                            .ThenInclude(a => a.Doctor) 
+                        .FirstOrDefaultAsync(ed => ed.DetailId == detailId);
+
                     if (existingDetail == null) return NotFound();
+
+                    var currentUserId = _userManager.GetUserId(User);
+                    if (existingDetail.Appoint?.Doctor?.UserId != currentUserId)
+                    {
+                        return Forbid();
+                    }
 
                     // Обновяваме само медицинските данни
                     existingDetail.Diagnosis = model.Diagnosis;

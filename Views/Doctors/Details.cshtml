@@ -1,5 +1,26 @@
 ﻿@model ClinicSystem_22180011.Models.Doctor
 
+@functions {
+    // GDPR функция за анонимизиране на потребителски имейли
+    public static string MaskEmail(string email)
+    {
+        if (string.IsNullOrEmpty(email) || !email.Contains("@"))
+            return email;
+
+        var parts = email.Split('@');
+        string username = parts[0];
+        string domain = parts[1];
+
+        if (username.Length <= 2)
+        {
+            return username[0] + "*@" + domain;
+        }
+
+        string maskedUsername = username[0] + new string('*', username.Length - 2) + username[username.Length - 1];
+        return maskedUsername + "@" + domain;
+    }
+}
+
 <div class="container mt-4">
     <div class="row">
         <div class="col-md-4">
@@ -32,7 +53,7 @@
                         {
                             <div class="alert alert-light border shadow-sm mb-2">
                                 <div class="d-flex justify-content-between">
-                                    <strong>👤 @comment.PatientName</strong>
+                                    <strong>👤 @MaskEmail(comment.PatientName)</strong>
                                     <small class="text-muted">@comment.CreatedAt.ToString("dd.MM.yyyy HH:mm")</small>
                                 </div>
                                 <p class="mb-0 mt-1">@comment.Content</p>
