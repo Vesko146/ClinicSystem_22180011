@@ -41,7 +41,7 @@
 
                         @if (User.IsInRole("Admin"))
                         {
-                            <a asp-action="Edit" asp-route-id="@item.PatientId" class="btn btn-sm btn-warning">Редактирай</a>
+                           @* <a asp-action="Edit" asp-route-id="@item.PatientId" class="btn btn-sm btn-warning">Редактирай</a>*@
                             <a asp-action="Delete" asp-route-id="@item.PatientId" class="btn btn-sm btn-danger">Изтрий</a>
                         }
                     </div>

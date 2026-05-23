@@ -197,15 +197,17 @@ namespace ClinicSystem_22180011.Controllers
             return View(doctor);
         }
 
-        // POST: Doctors/Delete/5
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
-        [Authorize(Roles = "Admin")]
+        [Authorize(Roles = "Admin")] 
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
             var doctor = await _context.Doctors.FindAsync(id);
             if (doctor != null)
             {
+                var relatedAppointments = _context.Appointments.Where(a => a.DoctorId == id);
+                _context.Appointments.RemoveRange(relatedAppointments);
+
                 _context.Doctors.Remove(doctor);
             }
 

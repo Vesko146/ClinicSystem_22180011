@@ -168,7 +168,6 @@ namespace ClinicSystem_22180011.Controllers
             return View(patient);
         }
 
-        // POST: Patients/Delete/5
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
@@ -176,6 +175,9 @@ namespace ClinicSystem_22180011.Controllers
             var patient = await _context.Patients.FindAsync(id);
             if (patient != null)
             {
+                var relatedAppointments = _context.Appointments.Where(a => a.PatientId == id);
+                _context.Appointments.RemoveRange(relatedAppointments);
+
                 _context.Patients.Remove(patient);
             }
 
