@@ -75,7 +75,6 @@ namespace ClinicSystem_22180011.Controllers
             {
                 await _userManager.AddToRoleAsync(user, "Doctor");
 
-                // ТУК Е МАГИЯТА: Превръщаме служебните кодове в текст за пациентите
                 string readableSchedule = ScheduleGroup switch
                 {
                     "Alpha" => "Понеделник, Сряда и Петък сутрин.",

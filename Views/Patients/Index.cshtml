@@ -11,7 +11,7 @@
 <form asp-action="Index" method="get" class="mb-3">
     <div class="input-group">
         <input type="text" name="searchString" class="form-control" 
-               placeholder="Търси по име или фамилия..." value="@ViewData["CurrentFilter"]" />
+               placeholder="Търси по име и фамилия или телефон..." value="@ViewData["CurrentFilter"]" />
         <button type="submit" class="btn btn-outline-primary">Търси</button>
         <a asp-action="Index" class="btn btn-outline-secondary">Изчисти</a>
     </div>

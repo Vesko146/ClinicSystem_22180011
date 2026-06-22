@@ -35,9 +35,8 @@ namespace ClinicSystem_22180011.Controllers
             {
                 var search = searchString.ToLower();
 
-                query = query.Where(p => p.FirstName.ToLower().Contains(search)
-                                      || p.LastName.ToLower().Contains(search)
-                                      || p.Phone.Contains(search));
+                query = query.Where(p => (p.FirstName + " " + p.LastName).ToLower().Contains(search)
+                          || p.Phone.Contains(search));
             }
 
             ViewData["CurrentFilter"] = searchString;
@@ -47,18 +46,18 @@ namespace ClinicSystem_22180011.Controllers
                 return View(await query.ToListAsync());
             }
 
-            if (User.IsInRole("Doctor"))
-            {
-                var doctor = await _context.Doctors.FirstOrDefaultAsync(d => d.UserId == currentUserId);
-                if (doctor != null)
-                {
-                    var myPatients = await query
-                        .Where(p => _context.Appointments.Any(a => a.PatientId == p.PatientId && a.DoctorId == doctor.DoctorId))
-                        .ToListAsync();
+            //if (User.IsInRole("Doctor"))
+            //{
+            //    var doctor = await _context.Doctors.FirstOrDefaultAsync(d => d.UserId == currentUserId);
+            //    if (doctor != null)
+            //    {
+            //        var myPatients = await query
+            //            .Where(p => _context.Appointments.Any(a => a.PatientId == p.PatientId && a.DoctorId == doctor.DoctorId))
+            //            .ToListAsync();
 
-                    return View(myPatients);
-                }
-            }
+            //        return View(myPatients);
+            //    }
+            //}
 
             return View(new List<Patient>());
         }
@@ -82,73 +81,73 @@ namespace ClinicSystem_22180011.Controllers
             return View(patient);
         }
 
-        public IActionResult Create()
-        {
-            return View();
-        }
+        //public IActionResult Create()
+        //{
+        //    return View();
+        //}
 
         
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("PatientId,FirstName,LastName,Phone,Email,LastModified22180011")] Patient patient)
-        {
-            if (ModelState.IsValid)
-            {
-                _context.Add(patient);
-                await _context.SaveChangesAsync();
-                return RedirectToAction(nameof(Index));
-            }
-            return View(patient);
-        }
+        //[HttpPost]
+        //[ValidateAntiForgeryToken]
+        //public async Task<IActionResult> Create([Bind("PatientId,FirstName,LastName,Phone,Email,LastModified22180011")] Patient patient)
+        //{
+        //    if (ModelState.IsValid)
+        //    {
+        //        _context.Add(patient);
+        //        await _context.SaveChangesAsync();
+        //        return RedirectToAction(nameof(Index));
+        //    }
+        //    return View(patient);
+        //}
 
-        // GET: Patients/Edit/5
-        public async Task<IActionResult> Edit(int? id)
-        {
-            if (id == null)
-            {
-                return NotFound();
-            }
+        //// GET: Patients/Edit/5
+        //public async Task<IActionResult> Edit(int? id)
+        //{
+        //    if (id == null)
+        //    {
+        //        return NotFound();
+        //    }
 
-            var patient = await _context.Patients.FindAsync(id);
-            if (patient == null)
-            {
-                return NotFound();
-            }
-            return View(patient);
-        }
+        //    var patient = await _context.Patients.FindAsync(id);
+        //    if (patient == null)
+        //    {
+        //        return NotFound();
+        //    }
+        //    return View(patient);
+        //}
 
 
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("PatientId,FirstName,LastName,Phone,Email,LastModified22180011")] Patient patient)
-        {
-            if (id != patient.PatientId)
-            {
-                return NotFound();
-            }
+        //[HttpPost]
+        //[ValidateAntiForgeryToken]
+        //public async Task<IActionResult> Edit(int id, [Bind("PatientId,FirstName,LastName,Phone,Email,LastModified22180011")] Patient patient)
+        //{
+        //    if (id != patient.PatientId)
+        //    {
+        //        return NotFound();
+        //    }
 
-            if (ModelState.IsValid)
-            {
-                try
-                {
-                    _context.Update(patient);
-                    await _context.SaveChangesAsync();
-                }
-                catch (DbUpdateConcurrencyException)
-                {
-                    if (!PatientExists(patient.PatientId))
-                    {
-                        return NotFound();
-                    }
-                    else
-                    {
-                        throw;
-                    }
-                }
-                return RedirectToAction(nameof(Index));
-            }
-            return View(patient);
-        }
+        //    if (ModelState.IsValid)
+        //    {
+        //        try
+        //        {
+        //            _context.Update(patient);
+        //            await _context.SaveChangesAsync();
+        //        }
+        //        catch (DbUpdateConcurrencyException)
+        //        {
+        //            if (!PatientExists(patient.PatientId))
+        //            {
+        //                return NotFound();
+        //            }
+        //            else
+        //            {
+        //                throw;
+        //            }
+        //        }
+        //        return RedirectToAction(nameof(Index));
+        //    }
+        //    return View(patient);
+        //}
 
         // GET: Patients/Delete/5
         public async Task<IActionResult> Delete(int? id)
@@ -169,14 +168,25 @@ namespace ClinicSystem_22180011.Controllers
         }
 
         [HttpPost, ActionName("Delete")]
+        [Authorize(Roles = "Admin")] 
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
             var patient = await _context.Patients.FindAsync(id);
+
             if (patient != null)
             {
-                var relatedAppointments = _context.Appointments.Where(a => a.PatientId == id);
+                 var relatedAppointments = _context.Appointments.Where(a => a.PatientId == id);
                 _context.Appointments.RemoveRange(relatedAppointments);
+
+                if (!string.IsNullOrEmpty(patient.UserId))
+                {
+                    var identityUser = await _userManager.FindByIdAsync(patient.UserId);
+                    if (identityUser != null)
+                    {
+                        await _userManager.DeleteAsync(identityUser);
+                    }
+                }
 
                 _context.Patients.Remove(patient);
             }
@@ -185,32 +195,32 @@ namespace ClinicSystem_22180011.Controllers
             return RedirectToAction(nameof(Index));
         }
 
-        [Authorize(Roles = "Patient")]
-        public async Task<IActionResult> ChooseDoctor()
-        {
-            ViewBag.Doctors = new SelectList(await _context.Doctors.ToListAsync(), "DoctorId", "FullName");
-            return View();
-        }
+        //[Authorize(Roles = "Patient")]
+        //public async Task<IActionResult> ChooseDoctor()
+        //{
+        //    ViewBag.Doctors = new SelectList(await _context.Doctors.ToListAsync(), "DoctorId", "FullName");
+        //    return View();
+        //}
 
-        [HttpPost]
-        [Authorize(Roles = "Patient")]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> ChooseDoctor(int chosenDoctorId)
-        {
-            var currentUserId = _userManager.GetUserId(User);
-            var patient = await _context.Patients.FirstOrDefaultAsync(p => p.UserId == currentUserId);
+        //[HttpPost]
+        //[Authorize(Roles = "Patient")]
+        //[ValidateAntiForgeryToken]
+        //public async Task<IActionResult> ChooseDoctor(int chosenDoctorId)
+        //{
+        //    var currentUserId = _userManager.GetUserId(User);
+        //    var patient = await _context.Patients.FirstOrDefaultAsync(p => p.UserId == currentUserId);
 
-            if (patient != null)
-            {
-                patient.ChosenDoctorId = chosenDoctorId;
-                _context.Update(patient);
-                await _context.SaveChangesAsync();
+        //    if (patient != null)
+        //    {
+        //        patient.ChosenDoctorId = chosenDoctorId;
+        //        _context.Update(patient);
+        //        await _context.SaveChangesAsync();
 
-                return RedirectToAction("AvailableSlots", "Appointments", new { doctorId = chosenDoctorId });
-            }
+        //        return RedirectToAction("AvailableSlots", "Appointments", new { doctorId = chosenDoctorId });
+        //    }
 
-            return RedirectToAction("Index", "Home");
-        }
+        //    return RedirectToAction("Index", "Home");
+        //}
 
         [Authorize(Roles = "Admin, Doctor, Patient")]
         public async Task<IActionResult> MedicalHistory(int id)

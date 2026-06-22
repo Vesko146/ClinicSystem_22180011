@@ -12,9 +12,9 @@ namespace ClinicSystem_22180011.Data
         public static async Task SeedRolesAndUsers(IServiceProvider serviceProvider)
         {
             var roleManager = serviceProvider.GetRequiredService<RoleManager<IdentityRole>>();
-            var userManager = serviceProvider.GetRequiredService<UserManager<User>>(); // Тук трябва да е твоят модел User
+            var userManager = serviceProvider.GetRequiredService<UserManager<User>>(); 
 
-            // 1. СЪЗДАВАНЕ НА РОЛИ
+            // СЪЗДАВАНЕ НА РОЛИ
             string[] roleNames = { "Admin", "Doctor", "Patient" };
             foreach (var roleName in roleNames)
             {
@@ -24,13 +24,12 @@ namespace ClinicSystem_22180011.Data
                 }
             }
 
-            // 2. СЪЗДАВАНЕ НА АДМИН
+            // СЪЗДАВАНЕ НА АДМИН
             var adminEmail = "admin@admin.com";
             var adminUser = await userManager.FindByEmailAsync(adminEmail);
 
             if (adminUser == null)
             {
-                // Правим обекта и му попълваме задължителните полета ръчно за всеки случай
                 var newAdmin = new User
                 {
                     UserName = adminEmail,
@@ -39,7 +38,6 @@ namespace ClinicSystem_22180011.Data
                     SecurityStamp = Guid.NewGuid().ToString()
                 };
 
-                // ВАЖНО: Използваме метода, който приема паролата като втори параметър!
                 var result = await userManager.CreateAsync(newAdmin, "Admin123!");
 
                 if (result.Succeeded)
@@ -48,7 +46,6 @@ namespace ClinicSystem_22180011.Data
                 }
                 else
                 {
-                    // Ако има грешка, ще я видим в конзолата
                     var errors = string.Join(", ", result.Errors.Select(e => e.Description));
                     Console.WriteLine($"[SEED ERROR]: {errors}");
                 }

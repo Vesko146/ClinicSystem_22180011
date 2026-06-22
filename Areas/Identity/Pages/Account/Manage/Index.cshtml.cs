@@ -39,7 +39,9 @@ namespace ClinicSystem_22180011.Areas.Identity.Pages.Account.Manage
 
         public class InputModel
         {
-            
+            [Required(ErrorMessage = "Телефонният номер е задължителен.")]
+            [StringLength(10, MinimumLength = 10, ErrorMessage = "Телефонният номер трябва да бъде точно 10 символа.")]
+            [RegularExpression(@"^[0-9]+$", ErrorMessage = "Телефонният номер трябва да съдържа само цифри.")]
             [Phone]
             [Display(Name = "Phone number")]
             public string PhoneNumber { get; set; }
